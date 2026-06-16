@@ -1,44 +1,118 @@
-# NestJS Backend Architecture Rules
+# Next.js 15 Architecture Rules
 
-## Architecture Style
+## Architecture Philosophy
 
-This project uses:
+This project follows:
 
 - Feature Driven Architecture
-- UseCase Driven Structure
-- 1 File = 1 Concern principle
-- Clean Architecture inspired layering
+- Use Case Driven Business Logic
+- App Router First
+- Server Components First
+- Clean Architecture Principles
+- 1 File = 1 Responsibility
 
-The codebase must remain:
+Goals:
 
 - scalable
-- modular
 - maintainable
 - testable
-- consistent
+- predictable
+- AI-friendly
+
+Architecture consistency is mandatory.
 
 ---
 
 # Core Principles
 
-## 1 File = 1 Concern
+## 1 File = 1 Responsibility
 
-Each file must have only one responsibility.
+Every file should have a single purpose.
 
 Examples:
 
-- One controller per use-case
-- One DTO per use-case
-- One validator per use-case
-- One response formatter per use-case
+- One use-case per file
+- One repository per file
+- One action per file
+- One schema per file
+- One component per file
 
 Avoid multi-purpose files.
+
+Bad:
+
+```ts
+user.service.ts
+```
+
+Contains:
+
+- create user
+- update user
+- delete user
+- login
+- register
+- forgot password
+
+Good:
+
+```ts
+create-user.use-case.ts
+update-user.use-case.ts
+delete-user.use-case.ts
+login.use-case.ts
+```
+
+---
+
+# Project Structure
+
+```txt
+src/
+├── app/
+├── modules/
+├── common/
+├── infrastructure/
+└── types/
+```
+
+---
+
+# App Router Rules
+
+Everything inside:
+
+```txt
+src/app/
+```
+
+is responsible only for:
+
+- routing
+- layouts
+- page composition
+- route handlers
+
+Examples:
+
+```txt
+app/
+├── dashboard/
+│   └── page.tsx
+├── users/
+│   ├── page.tsx
+│   └── [id]/
+│       └── page.tsx
+└── api/
+```
+
+Business logic must never live here.
 
 ---
 
 # Feature Driven Structure
 
-All business domains must live inside:
+Every business domain belongs inside:
 
 ```txt
 src/modules/
@@ -47,10 +121,12 @@ src/modules/
 Example:
 
 ```txt
-src/modules/auth
-src/modules/users
-src/modules/berita
-src/modules/fakultas
+src/modules/
+├── auth/
+├── users/
+├── products/
+├── orders/
+└── payments/
 ```
 
 Never organize by technical layer globally.
@@ -58,296 +134,399 @@ Never organize by technical layer globally.
 Avoid:
 
 ```txt
-src/controllers
-src/services
-src/repositories
+src/actions/
+src/services/
+src/repositories/
+src/hooks/
 ```
 
-Use feature grouping instead.
+Always organize by feature.
 
 ---
 
 # Standard Feature Structure
 
-Every feature must follow this structure:
+Every feature should follow:
 
 ```txt
 feature/
+├── actions/
 ├── use-cases/
 ├── repositories/
-├── entities/
 ├── services/
-├── interfaces/
-├── guards/
+├── schemas/
+├── components/
+├── hooks/
+├── types/
 ├── constants/
-├── utils/
-└── feature.module.ts
+└── index.ts
 ```
-
----
-
-# Use Case Driven Structure
-
-Every business action must have its own folder.
 
 Example:
 
 ```txt
+users/
+├── actions/
+├── use-cases/
+├── repositories/
+├── services/
+├── schemas/
+├── components/
+├── hooks/
+└── types/
+```
+
+---
+
+# Server Component First
+
+Default to:
+
+```tsx
+export default async function Page() {}
+```
+
+Use Server Components whenever possible.
+
+Advantages:
+
+- better performance
+- reduced bundle size
+- better SEO
+- less client JavaScript
+
+---
+
+# Client Component Rules
+
+Use:
+
+```tsx
+"use client";
+```
+
+only when required.
+
+Examples:
+
+- useState
+- useEffect
+- useReducer
+- DOM access
+- event handlers
+
+Avoid turning entire pages into Client Components.
+
+---
+
+# Page Rules
+
+Pages are composition layers.
+
+Pages may:
+
+- render UI
+- load data
+- call actions
+- handle route params
+- handle search params
+
+Pages must NOT:
+
+- contain business logic
+- contain validation logic
+- contain database queries
+- contain external service logic
+
+Keep pages thin.
+
+Target:
+
+```txt
+< 150 lines
+```
+
+---
+
+# Component Rules
+
+Components are presentation layers.
+
+Components may:
+
+- render UI
+- manage local UI state
+- receive props
+
+Components must NOT:
+
+- access Prisma
+- contain business rules
+- perform database operations
+
+Prefer:
+
+```txt
+user-card.tsx
+user-form.tsx
+user-table.tsx
+```
+
+Avoid giant components.
+
+---
+
+# Server Action Rules
+
+Server Actions are orchestration layers.
+
+Responsibilities:
+
+- receive input
+- validate input
+- execute use-case
+- return result
+
+Example:
+
+```ts
+"use server";
+
+export async function createUserAction(
+  input: CreateUserInput
+) {
+  return createUserUseCase.execute(input);
+}
+```
+
+Server Actions must NOT:
+
+- access Prisma directly
+- contain business logic
+- become massive files
+
+---
+
+# Route Handler Rules
+
+Route Handlers should:
+
+- parse request
+- validate request
+- execute use-case
+- return response
+
+Example:
+
+```txt
+app/api/users/route.ts
+```
+
+Route Handlers must NOT:
+
+- contain business logic
+- access Prisma directly
+
+---
+
+# Business Logic Rules
+
+Business logic belongs only inside:
+
+```txt
 use-cases/
-├── login/
-├── register/
-├── refresh-token/
-└── forgot-password/
 ```
 
----
-
-# Standard Use Case Structure
-
-Each use-case folder should contain:
+Examples:
 
 ```txt
-create-user/
-├── create-user.controller.ts
-├── create-user.use-case.ts
-├── create-user.dto.ts
-├── create-user.response.ts
-├── create-user.validator.ts
+create-user.use-case.ts
+update-user.use-case.ts
+delete-user.use-case.ts
 ```
 
-Optional:
+Use-cases should:
 
-```txt
-├── create-user.mapper.ts
-├── create-user.presenter.ts
-├── create-user.policy.ts
-```
-
----
-
-# Controller Rules
-
-Controllers must:
-
-- Handle HTTP request/response only
-- Validate incoming requests
-- Call use-case
-- Return formatted response
-
-Controllers must NOT:
-
-- Contain business logic
-- Access database directly
-- Hash passwords
-- Generate tokens
-- Contain validation logic
-- Become massive files
-
-Controllers should stay thin.
-
----
-
-# Use Case Rules
-
-Use-cases contain business logic.
-
-Rules:
-
-- Must expose `execute()` method
-- Must follow single responsibility principle
-- Must not contain HTTP-specific logic
-- Must not know Express/Nest request objects directly
+- expose execute()
+- have one responsibility
+- be framework independent
 
 Example:
 
 ```ts
 export class CreateUserUseCase {
-  async execute(dto: CreateUserDto) {}
+  async execute(input: CreateUserInput) {}
 }
+```
+
+---
+
+# Validation Rules
+
+Validation uses:
+
+```txt
+Zod
+```
+
+One schema per use-case.
+
+Examples:
+
+```txt
+create-user.schema.ts
+update-user.schema.ts
+login.schema.ts
+```
+
+Schemas are the source of truth.
+
+Example:
+
+```ts
+export const CreateUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
 ```
 
 ---
 
 # Repository Rules
 
-Repositories are responsible for:
+Repositories handle:
 
+- Prisma
+- SQL
 - database access
-- queries
 - persistence
 
 Repositories must NOT:
 
-- contain business rules
-- contain HTTP logic
-- contain response formatting
+- contain business logic
+- contain UI logic
+- contain validation logic
+
+Example:
+
+```ts
+export class UserRepository {
+  async findByEmail(email: string) {}
+}
+```
+
+---
+
+# Prisma Rules
+
+Prisma access is restricted.
+
+Allowed:
+
+```txt
+repositories/
+```
+
+Forbidden:
+
+```txt
+page.tsx
+component.tsx
+action.ts
+route.ts
+hook.ts
+```
+
+Never call:
+
+```ts
+prisma.user.findMany()
+```
+
+outside repositories.
 
 ---
 
 # Service Rules
 
-Services are reusable utilities/helpers.
-
-Examples:
-
-- JWT service
-- Password hashing service
-- OTP service
-- Mail service
-- File upload service
-
-Services must NOT become God Objects.
-
-Avoid massive service files.
-
----
-
-# DTO Rules
-
-DTOs must:
-
-- validate input
-- use `class-validator`
-- represent request payloads only
-
-One DTO per use-case.
-
-Example:
-
-```txt
-login.dto.ts
-create-user.dto.ts
-update-user.dto.ts
-```
-
----
-
-# Response Rules
-
-Responses should be standardized.
-
-Use:
-
-- response classes
-- presenters
-- serializers
-
-Avoid returning raw entities directly.
-
----
-
-# Validator Rules
-
-Complex validation must be separated.
-
-Example:
-
-```txt
-create-user.validator.ts
-```
-
-Do not overload DTOs with heavy business validation.
-
----
-
-# Naming Convention
-
-Use:
-
-- kebab-case
-- suffix naming
+Services handle reusable integrations.
 
 Examples:
 
 ```txt
-create-user.use-case.ts
-login.dto.ts
-auth.controller.ts
-user.repository.ts
+mail.service.ts
+storage.service.ts
+cache.service.ts
+payment.service.ts
+auth.service.ts
 ```
 
-Avoid:
+Services should:
+
+- remain focused
+- be reusable
+- avoid domain business logic
+
+Avoid God Services.
+
+Bad:
 
 ```txt
-CreateUser.ts
-userService.ts
-LOGINDTO.ts
+app.service.ts
+system.service.ts
 ```
 
 ---
 
-# Dependency Flow
+# Hook Rules
 
-Allowed flow:
+Hooks handle reusable client logic.
 
-```txt
-Controller
-→ Use Case
-→ Repository
-→ Database
-```
-
-Alternative:
+Examples:
 
 ```txt
-Controller
-→ Service
-→ External Provider
+use-auth.ts
+use-pagination.ts
+use-debounce.ts
 ```
 
-Avoid:
+Hooks must NOT:
 
-```txt
-Controller → Database
-Repository → Controller
-Circular dependency
-```
+- contain business logic
+- access database
+- access Prisma
 
 ---
 
-# Module Rules
+# Shared Code Rules
 
-Each feature must have its own module.
-
-Example:
-
-```txt
-auth.module.ts
-users.module.ts
-berita.module.ts
-```
-
-Modules should encapsulate their domain.
-
----
-
-# Common Folder Rules
-
-Shared reusable logic belongs inside:
+Shared code belongs inside:
 
 ```txt
 src/common/
 ```
 
-Examples:
+Example:
 
 ```txt
 common/
-├── decorators/
-├── filters/
-├── interceptors/
-├── exceptions/
-├── guards/
-└── utils/
+├── components/
+├── hooks/
+├── utils/
+├── constants/
+├── validators/
+└── lib/
 ```
 
-Do not place business-specific logic inside common.
+Only reusable code belongs here.
+
+Never place feature-specific logic in common.
 
 ---
 
 # Infrastructure Rules
 
-Infrastructure-related code belongs inside:
+External systems belong inside:
 
 ```txt
 src/infrastructure/
@@ -358,11 +537,103 @@ Examples:
 ```txt
 infrastructure/
 ├── prisma/
-├── database/
+├── redis/
 ├── cache/
+├── storage/
 ├── queue/
-└── storage/
+└── payments/
 ```
+
+Infrastructure should never contain business rules.
+
+---
+
+# Dependency Flow
+
+Allowed:
+
+```txt
+Page
+↓
+Action
+↓
+Use Case
+↓
+Repository
+↓
+Prisma
+↓
+Database
+```
+
+Alternative:
+
+```txt
+Route Handler
+↓
+Use Case
+↓
+Repository
+↓
+Database
+```
+
+Forbidden:
+
+```txt
+Component → Prisma
+Page → Prisma
+Action → Prisma
+Repository → Component
+```
+
+Avoid circular dependencies.
+
+---
+
+# Naming Convention
+
+Use:
+
+```txt
+kebab-case
+```
+
+Examples:
+
+```txt
+create-user.use-case.ts
+create-user.schema.ts
+create-user.action.ts
+user.repository.ts
+user-card.tsx
+```
+
+Avoid:
+
+```txt
+CreateUser.ts
+UserService.ts
+userStuff.ts
+LOGIN.ts
+```
+
+---
+
+# File Size Limits
+
+Recommended maximum:
+
+```txt
+Page        ≤ 150 lines
+Component   ≤ 200 lines
+Action      ≤ 100 lines
+Use Case    ≤ 150 lines
+Repository  ≤ 150 lines
+Hook        ≤ 100 lines
+```
+
+Split files when limits are exceeded.
 
 ---
 
@@ -371,44 +642,70 @@ infrastructure/
 Always:
 
 - prefer composition over inheritance
-- keep functions small
 - use explicit naming
+- keep functions small
 - avoid magic values
 - separate concerns aggressively
-- write readable code
+- write self-documenting code
 
 Avoid:
 
-- massive files
+- giant files
 - nested logic hell
 - duplicated business logic
-- generic utility dumping grounds
+- dumping everything into utils
 
 ---
 
-# Scalability Rules
+# Forbidden Rules
 
-Generated code must be:
+Never:
 
-- modular
-- testable
-- reusable
-- easy to refactor
-- easy to extend
-
-Architecture consistency is mandatory.
+- query Prisma inside pages
+- query Prisma inside components
+- query Prisma inside actions
+- place business logic inside actions
+- place business logic inside route handlers
+- create generic utility dumping grounds
+- create massive service files
+- duplicate business logic
 
 ---
 
-# AI Assistant Rules
+# AI Agent Workflow
+
+Before generating code:
+
+1. Identify feature
+2. Identify use-case
+3. Create schema
+4. Create repository
+5. Create use-case
+6. Create action
+7. Create components
+8. Connect page
+9. Connect route
+10. Test flow
+
+Never skip layers.
+
+---
+
+# AI Assistant Requirements
 
 When generating new features:
 
-- automatically create use-case structure
-- separate controller, dto, validator, response, and use-case
-- never place multiple business actions in one file
-- never create fat controllers
-- never create fat services
-- follow existing architecture consistently
+- create feature structure automatically
+- create schema before use-case
+- create repository before action
+- separate UI from business logic
+- follow dependency flow strictly
+- reuse existing code whenever possible
 
-Always prioritize maintainability over short code.
+Do not sacrifice architecture for shorter code.
+
+---
+
+# Golden Rule
+
+If a file cannot be explained in one sentence, it probably has more than one responsibility and should be split.
