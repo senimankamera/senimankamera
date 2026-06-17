@@ -1,9 +1,15 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { Check, Clock, Users, BookOpen, Image as ImageIcon, MapPin } from "lucide-react";
-import Link from "next/link";
+import { PackageRepository } from "@/src/modules/booking/repositories/package.repository";
+import { GetPackagesUseCase } from "@/src/modules/booking/use-cases/get-packages.use-case";
+import { ServicesSelector } from "@/src/modules/booking/components/services-selector";
 
-export default function ServicesPage() {
+export const revalidate = 0; // Dynamic route
+
+export default async function ServicesPage() {
+  const repository = new PackageRepository();
+  const getPackagesUseCase = new GetPackagesUseCase(repository);
+  const packages = await getPackagesUseCase.execute();
+
   const faqs = [
     {
       question: "How far in advance should we book?",
@@ -38,142 +44,9 @@ export default function ServicesPage() {
         </p>
       </section>
 
-      {/* Packages Section (Asymmetric Grid) */}
-      <section className="py-16 px-6 md:px-20 w-full max-w-[1440px] mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Package 1: Signature Wedding (Featured, spans 7 cols) */}
-          <div className="lg:col-span-7 bg-card border border-border/40 p-8 md:p-12 hover:-translate-y-1 transition-transform duration-500 shadow-sm relative overflow-hidden">
-            <span className="font-sans text-[10px] uppercase tracking-widest text-primary border border-primary px-3 py-1 font-bold mb-6 inline-block">
-              The Flagship
-            </span>
-            <h2 className="font-serif text-3xl md:text-4xl text-primary mb-4 font-medium">
-              Signature Wedding
-            </h2>
-            <p className="font-sans text-base text-secondary mb-8 max-w-md font-light leading-relaxed">
-              An immersive, all-day documentation of your celebration. Focused on candid emotion, editorial portraiture, and intricate details.
-            </p>
-            <div className="text-3xl font-serif text-primary mb-8 border-b border-border/20 pb-8 font-medium">
-              Starts at $4,500
-            </div>
-            
-            <ul className="space-y-4 font-sans text-sm text-secondary mb-12">
-              <li className="flex items-center gap-3">
-                <Clock className="w-5 h-5 text-primary" />
-                <span>Up to 10 hours of consecutive coverage</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-primary" />
-                <span>Two lead photographers for diverse perspectives</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <ImageIcon className="w-5 h-5 text-primary" />
-                <span>800+ color-graded high-resolution images</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <BookOpen className="w-5 h-5 text-primary" />
-                <span>Fine Art 10x10 Heirloom Album included</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <MapPin className="w-5 h-5 text-primary" />
-                <span>Curated online gallery with print store access</span>
-              </li>
-            </ul>
-
-            <Button
-              render={<Link href="/book?package=wedding" />}
-              nativeButton={false}
-              className="w-full md:w-auto font-sans text-xs uppercase tracking-widest px-8 py-6 rounded-none cursor-pointer"
-            >
-              Inquire for Availability
-            </Button>
-          </div>
-
-          {/* Package 2 & 3 Column (spans 5 cols) */}
-          <div className="lg:col-span-5 flex flex-col gap-8 lg:mt-12">
-            
-            {/* Package 2: Artistic Portrait */}
-            <div className="bg-card border border-border/40 p-8 hover:-translate-y-1 transition-transform duration-500">
-              <h3 className="font-serif text-2xl text-primary mb-2 font-medium">
-                Artistic Portrait
-              </h3>
-              <p className="font-sans text-sm text-secondary mb-6 font-light">
-                Editorial sessions for individuals, couples, or personal branding.
-              </p>
-              <div className="font-serif text-xl text-primary mb-6 font-medium">
-                Starts at $850
-              </div>
-              <ul className="space-y-3 font-sans text-sm text-secondary mb-8">
-                <li className="flex items-start gap-3">
-                  <Check className="w-4 h-4 text-secondary mt-0.5" />
-                  <span>2 hours of on-location or studio shooting</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="w-4 h-4 text-secondary mt-0.5" />
-                  <span>50 hand-retouched editorial images</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="w-4 h-4 text-secondary mt-0.5" />
-                  <span>Creative direction and styling consultation</span>
-                </li>
-              </ul>
-              <Button
-                render={<Link href="/book?package=portrait" />}
-                nativeButton={false}
-                variant="outline"
-                className="w-full font-sans text-xs uppercase tracking-widest py-5 rounded-none border-primary text-primary hover:bg-primary hover:text-on-primary cursor-pointer"
-              >
-                Book Session
-              </Button>
-            </div>
-
-            {/* Package 3: Event Documentation */}
-            <div className="bg-card border border-border/40 p-8 hover:-translate-y-1 transition-transform duration-500">
-              <h3 className="font-serif text-2xl text-primary mb-2 font-medium">
-                Event Documentation
-              </h3>
-              <p className="font-sans text-sm text-secondary mb-6 font-light">
-                Discreet, high-end coverage for corporate galas, private dinners, and brand launches.
-              </p>
-              <div className="font-serif text-xl text-primary mb-6 font-medium">
-                $400 / hour <span className="text-xs text-secondary font-sans font-normal">(3hr min)</span>
-              </div>
-              <ul className="space-y-3 font-sans text-sm text-secondary mb-8">
-                <li className="flex items-start gap-3">
-                  <Check className="w-4 h-4 text-secondary mt-0.5" />
-                  <span>Candid, unobtrusive photojournalism style</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="w-4 h-4 text-secondary mt-0.5" />
-                  <span>Rapid 48-hour turnaround for select PR images</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="w-4 h-4 text-secondary mt-0.5" />
-                  <span>Full commercial usage rights included</span>
-                </li>
-              </ul>
-              <Button
-                render={<Link href="/book?package=events" />}
-                nativeButton={false}
-                variant="outline"
-                className="w-full font-sans text-xs uppercase tracking-widest py-5 rounded-none border-primary text-primary hover:bg-primary hover:text-on-primary cursor-pointer"
-              >
-                Request Quote
-              </Button>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Custom Notice */}
-        <div className="mt-16 text-center border-t border-border/40 pt-12 max-w-2xl mx-auto">
-          <p className="font-sans text-sm text-secondary leading-relaxed">
-            Looking for something unique? We offer bespoke collections tailored to destination weddings, multi-day events, and specialized editorial campaigns.{" "}
-            <a href="/#contact" className="text-primary underline hover:opacity-80 transition-opacity">
-              Contact us for a custom proposal.
-            </a>
-          </p>
-        </div>
+      {/* Dynamic Services Selector (Packages & Price Info) */}
+      <section className="py-8 px-6 md:px-20 w-full max-w-[1440px] mx-auto">
+        <ServicesSelector initialPackages={packages} />
       </section>
 
       {/* Testimonials Section */}

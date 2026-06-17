@@ -5,6 +5,7 @@ async function main() {
   await prisma.booking.deleteMany({});
   await prisma.client.deleteMany({});
   await prisma.gallery.deleteMany({});
+  await prisma.package.deleteMany({});
 
   console.log("Seeding galleries...");
   const items = [
@@ -94,6 +95,66 @@ async function main() {
   for (const item of items) {
     await prisma.gallery.create({
       data: item,
+    });
+  }
+
+  console.log("Seeding packages...");
+  const packages = [
+    {
+      name: "Signature Wedding",
+      category: "Wedding",
+      price: 4500,
+      priceUnit: "starts at",
+      features: [
+        "Up to 10 hours of consecutive coverage",
+        "Two lead photographers for diverse perspectives",
+        "800+ color-graded high-resolution images",
+        "Fine Art 10x10 Heirloom Album included",
+        "Curated online gallery with print store access"
+      ],
+      description: "An immersive, all-day documentation of your celebration. Focused on candid emotion, editorial portraiture, and intricate details."
+    },
+    {
+      name: "Artistic Portrait",
+      category: "Portraits",
+      price: 850,
+      priceUnit: "starts at",
+      features: [
+        "2 hours of on-location or studio shooting",
+        "50 hand-retouched editorial images",
+        "Creative direction and styling consultation"
+      ],
+      description: "Editorial sessions for individuals, couples, or personal branding."
+    },
+    {
+      name: "Event Documentation",
+      category: "Events",
+      price: 400,
+      priceUnit: "/ hour",
+      features: [
+        "Candid, unobtrusive photojournalism style",
+        "Rapid 48-hour turnaround for select PR images",
+        "Full commercial usage rights included"
+      ],
+      description: "Discreet, high-end coverage for corporate galas, private dinners, and brand launches."
+    },
+    {
+      name: "Milestone Graduation",
+      category: "Graduation",
+      price: 600,
+      priceUnit: "starts at",
+      features: [
+        "1.5 hours of outdoor campus session",
+        "30 fully edited high-resolution digital files",
+        "Individual and family/group portraits included"
+      ],
+      description: "Premium editorial graduation portraits celebrating your academic milestone."
+    }
+  ];
+
+  for (const pkg of packages) {
+    await prisma.package.create({
+      data: pkg
     });
   }
 

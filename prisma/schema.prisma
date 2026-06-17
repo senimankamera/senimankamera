@@ -40,3 +40,15 @@ model Booking {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
+
+model Package {
+  id          String   @id @default(uuid())
+  name        String
+  category    String
+  price       Float
+  priceUnit   String?
+  features    String[]
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
