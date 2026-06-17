@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Check, Clock, Users, BookOpen, Image as ImageIcon, MapPin, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CategoryItem {
@@ -36,17 +36,7 @@ export function ServicesSelector({ initialPackages, categories }: ServicesSelect
     ? initialPackages.filter((pkg) => pkg.categoryId === selectedCategory)
     : [];
 
-  // Icon mapper for inclusions (aesthetic touch)
-  const renderIcon = (index: number) => {
-    const icons = [
-      <Clock key="clock" className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />,
-      <Users key="users" className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />,
-      <ImageIcon key="image" className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />,
-      <BookOpen key="book" className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />,
-      <MapPin key="map" className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-    ];
-    return icons[index % icons.length] || <Check key="check" className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />;
-  };
+
 
   return (
     <div className="w-full space-y-16">
@@ -153,7 +143,7 @@ export function ServicesSelector({ initialPackages, categories }: ServicesSelect
                         <ul className="space-y-4 font-sans text-sm text-secondary mb-8">
                           {pkg.features.map((feature, idx) => (
                             <li key={idx} className="flex items-start gap-3">
-                              {renderIcon(idx)}
+                              <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0 mt-2" />
                               <span>{feature}</span>
                             </li>
                           ))}

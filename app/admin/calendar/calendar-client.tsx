@@ -277,7 +277,8 @@ export function CalendarClient({ initialSlots, packages, stats }: CalendarClient
       if (res.success && res.data) {
         // Update local slots state
         setSlots((prev) => {
-          if (["Rejected", "Cancelled", "Completed"].includes(status)) {
+          const statusUpper = status.toUpperCase();
+          if (["REJECTED", "CANCELLED", "COMPLETED"].includes(statusUpper)) {
             // Non-locking status: delete the calendar slot block
             return prev.filter((s) => s.bookingId !== id);
           } else {
@@ -399,16 +400,20 @@ export function CalendarClient({ initialSlots, packages, stats }: CalendarClient
               let indicatorColor = "";
 
               if (slot) {
-                if (slot.status === "ManualBlock") {
+                const statusUpper = slot.status.toUpperCase();
+                if (statusUpper === "MANUALBLOCK") {
                   cellClass = "bg-neutral-100 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-500 font-medium";
                   indicatorColor = "bg-neutral-400";
-                } else if (slot.status === "PendingApproval") {
+                } else if (statusUpper === "PENDING" || statusUpper === "PENDINGAPPROVAL") {
                   cellClass = "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/30 text-amber-800 dark:text-amber-400 font-semibold";
                   indicatorColor = "bg-amber-500";
-                } else if (slot.status === "Approved") {
+                } else if (statusUpper === "APPROVED") {
                   cellClass = "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-400 font-semibold";
                   indicatorColor = "bg-emerald-500";
-                } else if (slot.status === "ManualBooking") {
+                } else if (statusUpper === "LUNAS") {
+                  cellClass = "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/30 text-blue-800 dark:text-blue-400 font-semibold";
+                  indicatorColor = "bg-blue-500";
+                } else if (statusUpper === "MANUALBOOKING") {
                   cellClass = "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/30 text-blue-800 dark:text-blue-400 font-semibold";
                   indicatorColor = "bg-blue-500";
                 }
@@ -526,7 +531,7 @@ export function CalendarClient({ initialSlots, packages, stats }: CalendarClient
                         <div>
                           <span className="text-[10px] uppercase font-bold text-secondary block">Status</span>
                           <span className="font-sans text-xs font-semibold uppercase tracking-wider block mt-1">
-                            {selectedSlot.status === "PendingApproval" ? "Pending" : selectedSlot.status}
+                            {selectedSlot.status.toUpperCase() === "PENDING" || selectedSlot.status === "PendingApproval" ? "Pending" : selectedSlot.status}
                           </span>
                         </div>
                         <Badge className="bg-primary text-primary-foreground font-sans text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-none">
@@ -579,17 +584,17 @@ export function CalendarClient({ initialSlots, packages, stats }: CalendarClient
                       {/* Actions */}
                       {selectedSlot.booking && (
                         <div className="flex flex-wrap gap-2 pt-2 border-t border-border/20">
-                          {selectedSlot.booking.status === "PendingApproval" && (
+                          {(selectedSlot.booking.status.toUpperCase() === "PENDING" || selectedSlot.booking.status === "PendingApproval") && (
                             <>
                               <Button
-                                onClick={() => handleQuickStatusUpdate(selectedSlot.booking!.id, "Approved")}
+                                onClick={() => handleQuickStatusUpdate(selectedSlot.booking!.id, "APPROVED")}
                                 disabled={isPending}
                                 className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-none text-[10px] uppercase font-bold tracking-wider py-4 flex-1"
                               >
                                 Approve
                               </Button>
                               <Button
-                                onClick={() => handleQuickStatusUpdate(selectedSlot.booking!.id, "Rejected")}
+                                onClick={() => handleQuickStatusUpdate(selectedSlot.booking!.id, "REJECTED")}
                                 disabled={isPending}
                                 variant="outline"
                                 className="border-rose-200 text-rose-600 hover:bg-rose-50 rounded-none text-[10px] uppercase font-bold tracking-wider py-4 flex-1"
@@ -598,17 +603,17 @@ export function CalendarClient({ initialSlots, packages, stats }: CalendarClient
                               </Button>
                             </>
                           )}
-                          {selectedSlot.booking.status === "Approved" && (
+                          {(selectedSlot.booking.status.toUpperCase() === "APPROVED" || selectedSlot.booking.status === "Approved") && (
                             <>
                               <Button
-                                onClick={() => handleQuickStatusUpdate(selectedSlot.booking!.id, "Completed")}
+                                onClick={() => handleQuickStatusUpdate(selectedSlot.booking!.id, "LUNAS")}
                                 disabled={isPending}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-none text-[10px] uppercase font-bold tracking-wider py-4 flex-1"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-none text-[10px] uppercase font-bold tracking-wider py-4 flex-1"
                               >
-                                Selesai
+                                Lunas
                               </Button>
                               <Button
-                                onClick={() => handleQuickStatusUpdate(selectedSlot.booking!.id, "Cancelled")}
+                                onClick={() => handleQuickStatusUpdate(selectedSlot.booking!.id, "CANCELLED")}
                                 disabled={isPending}
                                 variant="outline"
                                 className="border-neutral-200 text-neutral-600 hover:bg-neutral-50 rounded-none text-[10px] uppercase font-bold tracking-wider py-4 flex-1"

@@ -35,7 +35,7 @@ export class BookingRepository {
       },
     });
 
-    const status = data.status || "PendingApproval";
+    const status = data.status || "PENDING";
     const source = data.source || (data.status === "ManualBooking" ? "manual" : "website");
 
     // Create booking and slot in transaction
@@ -102,7 +102,7 @@ export class BookingRepository {
           lte: endOfDay,
         },
         status: {
-          in: ["PendingApproval", "Approved", "ManualBooking", "ManualBlock"],
+          in: ["PENDING", "APPROVED", "LUNAS", "ManualBooking", "ManualBlock"],
         },
       },
     });
@@ -114,7 +114,7 @@ export class BookingRepository {
     const slots = await prisma.calendarSlot.findMany({
       where: {
         status: {
-          in: ["PendingApproval", "Approved", "ManualBooking", "ManualBlock"],
+          in: ["PENDING", "APPROVED", "LUNAS", "ManualBooking", "ManualBlock"],
         },
       },
       select: {
@@ -129,7 +129,7 @@ export class BookingRepository {
     const slots = await prisma.calendarSlot.findMany({
       where: {
         status: {
-          in: ["PendingApproval", "Approved", "ManualBooking", "ManualBlock"],
+          in: ["PENDING", "APPROVED", "LUNAS", "ManualBooking", "ManualBlock"],
         },
       },
       include: {
@@ -226,38 +226,104 @@ export class BookingRepository {
     });
   }
 
-  async getBookingStats() {
-    const stats = await prisma.booking.groupBy({
-      by: ['status'],
-      _count: {
-        _all: true,
+  async getDashboardStats() {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Revenue from PaymentTransaction
+    const [allRevenue, monthRevenue, todayRevenue] = await Promise.all([
+      prisma.paymentTransaction.aggregate({ _sum: { amount: true } }),
+      prisma.paymentTransaction.aggregate({ _sum: { amount: true }, where: { createdAt: { gte: startOfMonth } } }),
+      prisma.paymentTransaction.aggregate({ _sum: { amount: true }, where: { createdAt: { gte: startOfToday } } }),
+    ]);
+
+    // Booking counts by status
+    const bookings = await prisma.booking.findMany({
+      select: {
+        status: true,
       },
     });
 
-    const result = {
-      total: 0,
-      pendingApproval: 0,
-      approved: 0,
-      rejected: 0,
-      cancelled: 0,
-      completed: 0,
-      manualBooking: 0,
-      manualBlock: 0,
+    let totalBookings = 0;
+    let pendingCount = 0;
+    let approvedCount = 0;
+    let lunasCount = 0;
+    let cancelledCount = 0;
+    let actionRequired = 0;
+
+    for (const booking of bookings) {
+      totalBookings++;
+      if (booking.status === "PENDING") {
+        pendingCount++;
+        actionRequired++;
+      } else if (booking.status === "APPROVED") {
+        approvedCount++;
+      } else if (booking.status === "LUNAS") {
+        lunasCount++;
+      } else if (booking.status === "CANCELLED") {
+        cancelledCount++;
+      }
+    }
+
+    return {
+      revenue: allRevenue._sum.amount ?? 0,
+      revenueMonth: monthRevenue._sum.amount ?? 0,
+      revenueToday: todayRevenue._sum.amount ?? 0,
+      totalBookings,
+      pendingCount,
+      approvedCount,
+      lunasCount,
+      cancelledCount,
+      actionRequired,
     };
+  }
 
-    stats.forEach((stat: any) => {
-      const count = stat._count._all;
-      result.total += count;
-      if (stat.status === "PendingApproval") result.pendingApproval = count;
-      else if (stat.status === "Approved") result.approved = count;
-      else if (stat.status === "Rejected") result.rejected = count;
-      else if (stat.status === "Cancelled") result.cancelled = count;
-      else if (stat.status === "Completed") result.completed = count;
-      else if (stat.status === "ManualBooking") result.manualBooking = count;
-      else if (stat.status === "ManualBlock") result.manualBlock = count;
+  async getUpcomingSchedule(limit: number = 5) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return prisma.booking.findMany({
+      where: {
+        bookingDate: {
+          gte: today,
+        },
+        status: {
+          in: ["APPROVED", "LUNAS"],
+        },
+      },
+      orderBy: {
+        bookingDate: "asc",
+      },
+      take: limit,
+      include: {
+        client: true,
+      },
     });
+  }
 
-    return result;
+  async getRecapData(from?: Date, to?: Date) {
+    const where: any = {};
+    if (from || to) {
+      where.bookingDate = {};
+      if (from) {
+        where.bookingDate.gte = from;
+      }
+      if (to) {
+        where.bookingDate.lte = to;
+      }
+    }
+
+    return prisma.booking.findMany({
+      where,
+      orderBy: {
+        bookingDate: "desc",
+      },
+      include: {
+        client: true,
+        paymentTransactions: true,
+      },
+    });
   }
 }
 

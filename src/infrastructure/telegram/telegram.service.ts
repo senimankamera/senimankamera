@@ -40,7 +40,7 @@ export class TelegramService {
 ⏰ <b>Waktu Acara:</b> ${booking.eventTime || "-"}
 🎉 <b>Nama Acara:</b> ${booking.eventName || "-"}
 📍 <b>Lokasi Acara:</b> ${booking.eventLocation || "-"}
-💰 <b>Jenis Pembayaran:</b> DP 50%
+💰 <b>Jenis Pembayaran:</b> DP 20%
 📝 <b>Catatan Vision:</b> ${booking.notes || "-"}
 ----------------------------------
 <i>Silakan tinjau dan konfirmasi di Admin Dashboard.</i>
@@ -89,18 +89,18 @@ export class TelegramService {
 
     let emoji = "ℹ️";
     let statusText = status.toUpperCase();
-    if (status === "Approved") {
+    if (status === "APPROVED") {
       emoji = "✅";
       statusText = "DISETUJUI / APPROVED";
-    } else if (status === "Rejected") {
+    } else if (status === "REJECTED") {
       emoji = "❌";
       statusText = "DITOLAK / REJECTED";
-    } else if (status === "Cancelled") {
+    } else if (status === "CANCELLED") {
       emoji = "🚫";
       statusText = "DIBATALKAN / CANCELLED";
-    } else if (status === "Completed") {
-      emoji = "🎉";
-      statusText = "SELESAI / COMPLETED";
+    } else if (status === "LUNAS") {
+      emoji = "💰";
+      statusText = "LUNAS";
     }
 
     const message = `

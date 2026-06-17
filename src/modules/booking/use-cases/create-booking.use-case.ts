@@ -22,7 +22,7 @@ export class CreateBookingUseCase {
     const targetPackage = await packageRepo.findByNameOrCategory(parsed.packageType);
 
     const totalAmountIdr = targetPackage?.price || 1500000; // Default price if not found
-    const dpAmountIdr = totalAmountIdr * 0.5;
+    const dpAmountIdr = totalAmountIdr * 0.2; // DP is 20% globally
 
     // Generate a booking ID
     const crypto = require("crypto");
@@ -46,7 +46,7 @@ export class CreateBookingUseCase {
           id: targetPackage?.id || "custom-pkg",
           price: dpAmountIdr,
           quantity: 1,
-          name: `DP 50% - ${targetPackage?.name || parsed.packageType}`,
+          name: `DP 20% - ${targetPackage?.name || parsed.packageType}`,
         },
       ],
     });
@@ -71,7 +71,7 @@ export class CreateBookingUseCase {
       snapUrl: snapResult.redirectUrl || undefined,
       dpAmount: dpAmountIdr,
       totalAmount: totalAmountIdr,
-      status: "PendingApproval",
+      status: "PENDING",
     };
 
     const booking = await this.bookingRepository.createBooking(data);

@@ -158,17 +158,17 @@ export class CalendarRepository {
     const activeBookingsCount = await prisma.booking.count({
       where: {
         status: {
-          in: ["Approved", "ManualBooking", "PendingApproval"],
+          in: ["APPROVED", "LUNAS", "ManualBooking", "PENDING"],
         },
       },
     });
 
     const pendingCount = await prisma.booking.count({
-      where: { status: "PendingApproval" },
+      where: { status: "PENDING" },
     });
 
     const approvedCount = await prisma.booking.count({
-      where: { status: "Approved" },
+      where: { status: "APPROVED" },
     });
 
     const thisMonth = new Date().getMonth();
@@ -183,7 +183,7 @@ export class CalendarRepository {
           lte: endOfMonth,
         },
         status: {
-          not: "Cancelled",
+          not: "CANCELLED",
         },
       },
     });
@@ -193,7 +193,7 @@ export class CalendarRepository {
     });
 
     const cancelledCount = await prisma.booking.count({
-      where: { status: "Cancelled" },
+      where: { status: "CANCELLED" },
     });
 
     return {

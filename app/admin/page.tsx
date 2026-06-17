@@ -1,18 +1,15 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { 
-  DollarSign, 
-  Camera, 
-  MessageSquare,
-  TrendingUp,
+import {
+  DollarSign,
+  CalendarCheck,
+  AlertCircle,
   CheckCircle,
+  Clock,
   Calendar,
-  ArrowRight,
-  MoreHorizontal,
   ChevronRight,
-  RefreshCw,
-  Menu
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,9 +17,55 @@ import { Badge } from "@/components/ui/badge";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { BookingRepository } from "@/src/modules/booking/repositories/booking.repository";
-import { GetRecentBookingsUseCase } from "@/src/modules/booking/use-cases/get-recent-bookings.use-case";
 
 export const revalidate = 0; // Ensure admin dashboard gets fresh database queries
+
+function formatRupiah(amount: number): string {
+  if (amount >= 1_000_000) {
+    const millions = amount / 1_000_000;
+    const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1);
+    return `Rp ${formatted}jt`;
+  }
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function getStatusBadgeStyle(status: string) {
+  switch (status.toUpperCase()) {
+    case "APPROVED":
+    case "MANUALBOOKING":
+      return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+    case "PENDING":
+    case "PENDINGAPPROVAL":
+      return "bg-amber-50 text-amber-700 border border-amber-200";
+    case "REJECTED":
+    case "CANCELLED":
+      return "bg-red-50 text-red-700 border border-red-200";
+    case "LUNAS":
+    case "PAID":
+      return "bg-blue-50 text-blue-700 border border-blue-200";
+    default:
+      return "bg-muted text-secondary border border-border/30";
+  }
+}
+
+function getStatusLabel(status: string) {
+  switch (status.toUpperCase()) {
+    case "PENDING":
+    case "PENDINGAPPROVAL": return "Pending";
+    case "APPROVED": return "Approved";
+    case "MANUALBOOKING": return "Manual";
+    case "REJECTED": return "Rejected";
+    case "CANCELLED": return "Cancelled";
+    case "LUNAS":
+    case "PAID": return "Lunas";
+    default: return status;
+  }
+}
 
 export default async function AdminPage() {
   const cookieStore = await cookies();
@@ -34,15 +77,32 @@ export default async function AdminPage() {
   }
 
   const repository = new BookingRepository();
-  const getRecentBookingsUseCase = new GetRecentBookingsUseCase(repository);
-  const dbBookings = await getRecentBookingsUseCase.execute(10);
 
-  const bookingRequests = dbBookings.map((req: any) => {
+  // Fetch dashboard stats, recent bookings and upcoming schedule in parallel
+  const [dashboardStats, recentBookings, upcomingSchedule] = await Promise.all([
+    repository.getDashboardStats(),
+    repository.findRecentBookings(10),
+    repository.getUpcomingSchedule(5),
+  ]);
+
+  const {
+    revenue,
+    revenueMonth,
+    revenueToday,
+    totalBookings,
+    pendingCount,
+    approvedCount,
+    lunasCount,
+    cancelledCount,
+    actionRequired,
+  } = dashboardStats;
+
+  const bookingRequests = recentBookings.map((req: any) => {
     const clientName = req.client.fullName;
     const initialLetter = clientName.charAt(0).toUpperCase() || "?";
-    const dateFormatted = new Intl.DateTimeFormat("en-US", {
-      month: "short",
+    const dateFormatted = new Intl.DateTimeFormat("id-ID", {
       day: "numeric",
+      month: "short",
       year: "numeric",
     }).format(req.bookingDate);
 
@@ -56,11 +116,31 @@ export default async function AdminPage() {
     };
   });
 
+  const upcomingBookings = upcomingSchedule.map((req: any) => {
+    const clientName = req.client.fullName;
+    const initialLetter = clientName.charAt(0).toUpperCase() || "?";
+    const dateFormatted = new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(req.bookingDate);
+
+    return {
+      id: req.id,
+      client: clientName,
+      initialLetter,
+      date: dateFormatted,
+      time: req.eventTime || "12:00",
+      event: req.eventName || req.packageType,
+      status: req.status,
+    };
+  });
+
   return (
     <SidebarProvider>
       <AdminSidebar variant="sidebar" />
       <SidebarInset className="flex flex-col min-h-screen bg-background text-foreground">
-        
+
         {/* Header App Bar */}
         <header className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-border/40 bg-background sticky top-0 z-40">
           <div className="flex items-center gap-3">
@@ -75,17 +155,11 @@ export default async function AdminPage() {
               </span>
             </div>
           </div>
-
-          <div className="flex items-center gap-4">
-            <span className="font-sans text-xs uppercase tracking-widest text-secondary bg-muted px-4 py-2 font-bold border border-border/30">
-              Last 30 Days
-            </span>
-          </div>
         </header>
 
         {/* Content Container */}
         <div className="flex-1 px-6 md:px-12 py-10 max-w-[1200px] mx-auto w-full space-y-16">
-          
+
           {/* Welcome Header */}
           <div className="space-y-2">
             <h2 className="font-serif text-3xl md:text-5xl text-primary font-medium">Dashboard</h2>
@@ -94,8 +168,8 @@ export default async function AdminPage() {
 
           {/* Bento Grid: Key Metrics */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            {/* Metric 1 */}
+
+            {/* Panel 1: Revenue */}
             <Card className="rounded-none border-border/40 relative overflow-hidden group shadow-none">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="font-sans text-xs uppercase tracking-widest text-secondary font-bold">
@@ -103,147 +177,176 @@ export default async function AdminPage() {
                 </CardTitle>
                 <DollarSign className="w-4 h-4 text-secondary" />
               </CardHeader>
-              <CardContent className="space-y-1">
-                <div className="font-serif text-4xl font-medium text-primary">$24,500</div>
-                <div className="flex items-center gap-1 font-sans text-xs text-green-700 font-semibold">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  <span>+12% vs last month</span>
+              <CardContent className="space-y-2">
+                <div className="font-serif text-4xl font-medium text-primary">
+                  {revenue > 0 ? formatRupiah(revenue) : "Rp 0"}
+                </div>
+                <div className="flex flex-col gap-1 font-sans text-[10px] uppercase tracking-widest text-secondary font-semibold">
+                  <div className="flex items-center gap-1">
+                    <span>Bulan Ini:</span>
+                    <span className="text-primary font-bold">{formatRupiah(revenueMonth)}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span>Hari Ini:</span>
+                    <span className="text-primary font-bold">{formatRupiah(revenueToday)}</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Metric 2 */}
+            {/* Panel 2: Booking Status */}
             <Card className="rounded-none border-border/40 relative overflow-hidden group shadow-none">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="font-sans text-xs uppercase tracking-widest text-secondary font-bold">
-                  Total Shoots
+                  Status Booking
                 </CardTitle>
-                <Camera className="w-4 h-4 text-secondary" />
+                <CalendarCheck className="w-4 h-4 text-secondary" />
               </CardHeader>
-              <CardContent className="space-y-1">
-                <div className="font-serif text-4xl font-medium text-primary">18</div>
-                <div className="flex items-center gap-1 font-sans text-xs text-secondary font-semibold">
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  <span>14 delivered, 4 pending</span>
+              <CardContent className="space-y-2">
+                <div className="font-serif text-4xl font-medium text-primary">{totalBookings}</div>
+                <div className="flex flex-wrap items-center gap-2 font-sans text-[10px] uppercase tracking-widest font-semibold text-secondary">
+                  <span className="text-amber-700">{pendingCount} pending</span>
+                  <span>·</span>
+                  <span className="text-emerald-700">{approvedCount} approved</span>
+                  <span>·</span>
+                  <span className="text-blue-700">{lunasCount} lunas</span>
+                  <span>·</span>
+                  <span className="text-red-700">{cancelledCount} cancelled</span>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Metric 3: Colored Primary Accent */}
-            <Card className="rounded-none border-border/40 relative overflow-hidden group shadow-none bg-primary text-primary-foreground">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="font-sans text-xs uppercase tracking-widest text-primary-foreground/75 font-bold">
-                  New Leads
-                </CardTitle>
-                <MessageSquare className="w-4 h-4 text-primary-foreground/75" />
-              </CardHeader>
-              <CardContent className="space-y-1">
-                <div className="font-serif text-4xl font-medium">7</div>
-                <div className="flex items-center gap-1 font-sans text-xs text-primary-foreground/80">
-                  <span>Requires actions</span>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Panel 3: Action Required — accented card */}
+            <Link href="/admin/bookings?status=PENDING" className="block transition-transform hover:scale-[1.01]">
+              <Card className={`rounded-none border-border/40 relative overflow-hidden group shadow-none cursor-pointer h-full ${actionRequired > 0 ? "bg-primary text-primary-foreground" : ""}`}>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className={`font-sans text-xs uppercase tracking-widest font-bold ${actionRequired > 0 ? "text-primary-foreground/75" : "text-secondary"}`}>
+                    Action Required
+                  </CardTitle>
+                  <AlertCircle className={`w-4 h-4 ${actionRequired > 0 ? "text-primary-foreground/75" : "text-secondary"}`} />
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className={`font-serif text-4xl font-medium ${actionRequired > 0 ? "text-primary-foreground" : "text-primary"}`}>
+                    {actionRequired}
+                  </div>
+                  <div className={`flex items-center gap-1 font-sans text-xs font-semibold ${actionRequired > 0 ? "text-primary-foreground/80" : "text-secondary"}`}>
+                    {actionRequired > 0 ? (
+                      <>
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{actionRequired} pesanan pending, butuh tindakan</span>
+                      </>
+                    ) : (
+                      <span>Semua pesanan sudah ditangani ✓</span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
 
           </section>
 
-          {/* Main Content Layout (Asymmetric) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
-            {/* Left Column (Wider): Recent Bookings */}
-            <div className="lg:col-span-8 space-y-8">
-              <Card className="rounded-none border-border/40 shadow-none">
-                <CardHeader className="flex flex-row items-center justify-between py-6">
-                  <div>
-                    <CardTitle className="font-serif text-xl font-medium">Recent Booking Requests</CardTitle>
-                    <CardDescription className="font-sans text-xs text-secondary font-light">Recent shoot inquiries from prospects</CardDescription>
+          {/* Grid section for Upcoming Schedule and Recent Booking Requests */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Column 1: Upcoming Schedule */}
+            <Card className="rounded-none border-border/40 shadow-none">
+              <CardHeader className="flex flex-row items-center justify-between py-6">
+                <div>
+                  <CardTitle className="font-serif text-xl font-medium">Jadwal Terdekat (Upcoming)</CardTitle>
+                  <CardDescription className="font-sans text-xs text-secondary font-light">Jadwal pemotretan terdekat yang disetujui/lunas</CardDescription>
+                </div>
+                <Link href="/admin/recap" className="font-sans text-xs uppercase tracking-widest font-bold text-primary hover:underline transition-colors flex items-center gap-1">
+                  Lihat Rekap Pesanan <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </CardHeader>
+              <CardContent className="p-0 border-t border-border/30">
+                {upcomingBookings.length === 0 ? (
+                  <div className="py-16 text-center">
+                    <Calendar className="w-8 h-8 text-border mx-auto mb-3" />
+                    <p className="font-sans text-sm text-secondary">Belum ada jadwal terdekat.</p>
                   </div>
-                  <Link href="#" className="font-sans text-xs uppercase tracking-widest font-bold text-secondary hover:text-primary transition-colors">
-                    View All
-                  </Link>
-                </CardHeader>
-                <CardContent className="p-0 border-t border-border/30">
+                ) : (
+                  <div className="divide-y divide-border/20">
+                    {upcomingBookings.map((req: any) => (
+                      <div
+                        key={req.id}
+                        className="px-6 py-4 flex items-center justify-between gap-4 hover:bg-muted/10 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-neutral-200 flex items-center justify-center font-serif text-sm font-semibold rounded-full border border-border/30 shrink-0">
+                            {req.initialLetter}
+                          </div>
+                          <div>
+                            <h4 className="font-sans text-sm font-bold text-primary">{req.client}</h4>
+                            <p className="font-sans text-xs text-secondary flex flex-wrap items-center gap-1.5 mt-0.5">
+                              <Calendar className="w-3 h-3" /> {req.date} · <Clock className="w-3.5 h-3.5" /> {req.time}
+                              {req.event && <> · {req.event}</>}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`px-3 py-1 font-sans text-[10px] font-bold uppercase tracking-widest rounded-sm ${getStatusBadgeStyle(req.status)}`}>
+                            {getStatusLabel(req.status)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Column 2: Recent Booking Requests */}
+            <Card className="rounded-none border-border/40 shadow-none">
+              <CardHeader className="flex flex-row items-center justify-between py-6">
+                <div>
+                  <CardTitle className="font-serif text-xl font-medium">Recent Booking Requests</CardTitle>
+                  <CardDescription className="font-sans text-xs text-secondary font-light">Permintaan booking terbaru dari klien</CardDescription>
+                </div>
+                <Link href="/admin/bookings" className="font-sans text-xs uppercase tracking-widest font-bold text-secondary hover:text-primary transition-colors flex items-center gap-1">
+                  View All <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </CardHeader>
+              <CardContent className="p-0 border-t border-border/30">
+                {bookingRequests.length === 0 ? (
+                  <div className="py-16 text-center">
+                    <Calendar className="w-8 h-8 text-border mx-auto mb-3" />
+                    <p className="font-sans text-sm text-secondary">Belum ada pesanan masuk.</p>
+                  </div>
+                ) : (
                   <div className="divide-y divide-border/20">
                     {bookingRequests.map((req: any) => (
                       <div
                         key={req.id}
-                        className="p-6 flex items-center justify-between gap-4 hover:bg-muted/10 transition-colors"
+                        className="px-6 py-4 flex items-center justify-between gap-4 hover:bg-muted/10 transition-colors"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-neutral-200 flex items-center justify-center font-serif text-sm font-semibold rounded-full border border-border/30">
+                          <div className="w-10 h-10 bg-neutral-200 flex items-center justify-center font-serif text-sm font-semibold rounded-full border border-border/30 shrink-0">
                             {req.initialLetter}
                           </div>
                           <div>
                             <h4 className="font-sans text-sm font-bold text-primary">{req.client}</h4>
                             <p className="font-sans text-xs text-secondary flex items-center gap-1.5 mt-0.5">
-                              <Calendar className="w-3 h-3" /> {req.date} • {req.type}
+                              <Calendar className="w-3 h-3" /> {req.date}
+                              {req.type && <> · {req.type}</>}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Badge className="rounded-none bg-muted text-secondary border-none px-3 py-1 font-sans text-[10px] font-bold uppercase tracking-widest">
-                            {req.status}
-                          </Badge>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-secondary">
-                            <ChevronRight className="w-4 h-4" />
-                          </Button>
+                          <span className={`px-3 py-1 font-sans text-[10px] font-bold uppercase tracking-widest rounded-sm ${getStatusBadgeStyle(req.status)}`}>
+                            {getStatusLabel(req.status)}
+                          </span>
+                          <Link href={`/admin/bookings`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-secondary">
+                              <ChevronRight className="w-4 h-4" />
+                            </Button>
+                          </Link>
                         </div>
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Column (Narrower): Upload Queue Status */}
-            <div className="lg:col-span-4">
-              <Card className="rounded-none border-border/40 shadow-none">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="font-serif text-lg font-medium">Upload Queue</CardTitle>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-secondary">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  
-                  {/* Status Item 1 */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2 font-sans text-xs">
-                      <span className="font-bold text-primary">Miller Wedding.zip</span>
-                      <span className="text-secondary font-bold">78%</span>
-                    </div>
-                    <div className="w-full bg-neutral-200 h-1 rounded-full overflow-hidden">
-                      <div className="bg-primary h-full" style={{ width: "78%" }} />
-                    </div>
-                    <div className="mt-2 font-sans text-[10px] uppercase tracking-widest text-secondary flex items-center gap-1.5 font-semibold">
-                      <RefreshCw className="w-3 h-3 animate-spin" /> Syncing to cloud...
-                    </div>
-                  </div>
-
-                  {/* Status Item 2 */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2 font-sans text-xs">
-                      <span className="font-bold text-primary">Vogue Editorial.raw</span>
-                      <span className="text-green-700 font-bold uppercase tracking-wide">Done</span>
-                    </div>
-                    <div className="w-full bg-neutral-200 h-1 rounded-full overflow-hidden">
-                      <div className="bg-green-700 h-full" style={{ width: "100%" }} />
-                    </div>
-                    <div className="mt-2 font-sans text-[10px] uppercase tracking-widest text-secondary flex items-center gap-1.5 font-semibold">
-                      <CheckCircle className="w-3 h-3 text-green-700" /> Uploaded 2 hrs ago
-                    </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-border/30">
-                    <Button variant="outline" className="w-full font-sans text-xs uppercase tracking-widest py-5 rounded-none flex items-center justify-center gap-2 border-border text-primary hover:bg-neutral-100">
-                      Manage Galleries <ArrowRight className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-
-                </CardContent>
-              </Card>
-            </div>
-
+                )}
+              </CardContent>
+            </Card>
           </div>
 
         </div>

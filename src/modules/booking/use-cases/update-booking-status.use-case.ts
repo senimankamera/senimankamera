@@ -9,7 +9,7 @@ export class UpdateBookingStatusUseCase {
   ) {}
 
   async execute(id: string, status: string) {
-    const validStatuses = ["PendingApproval", "Approved", "Rejected", "Cancelled", "Completed"];
+    const validStatuses = ["PENDING", "APPROVED", "REJECTED", "CANCELLED", "LUNAS"];
     if (!validStatuses.includes(status)) {
       throw new Error(`Status tidak valid: ${status}`);
     }
@@ -26,7 +26,7 @@ export class UpdateBookingStatusUseCase {
     const startOfDay = new Date(booking.bookingDate);
     startOfDay.setHours(12, 0, 0, 0);
 
-    const isLockingStatus = ["PendingApproval", "Approved"].includes(status);
+    const isLockingStatus = ["PENDING", "APPROVED", "LUNAS"].includes(status);
 
     if (isLockingStatus) {
       // Upsert the slot
@@ -36,15 +36,54 @@ export class UpdateBookingStatusUseCase {
         booking.id
       );
     } else {
-      // For Rejected, Cancelled, Completed, we update the slot status.
-      // Alternatively, we can update or delete it. Let's delete it so the date becomes 100% clean and available.
-      // Wait, let's update it to the non-locking status, or delete it. Deleting is safer for releasing slot availability cleanly.
-      // Let's delete it if cancelled/rejected, so it doesn't appear in calendar slots query at all.
+      // For Rejected, Cancelled, we delete the slot so the date becomes 100% clean and available.
       await this.calendarRepository.deleteSlotByBookingId(booking.id);
     }
 
-    // Send Telegram Notification for Approval or Rejection
-    if (status === "Approved" || status === "Rejected") {
+    // Process payment ledger (PaymentTransaction)
+    const prismaModule = await import("@/src/infrastructure/prisma/client");
+    const totalAmount = booking.totalAmount || 0;
+    if (status === "APPROVED") {
+      const dpAmount = totalAmount * 0.2;
+      await prismaModule.prisma.paymentTransaction.upsert({
+        where: { uniqueKey: `${booking.id}-DP` },
+        update: {},
+        create: {
+          bookingId: booking.id,
+          type: "DP",
+          amount: dpAmount,
+          uniqueKey: `${booking.id}-DP`,
+        },
+      });
+    } else if (status === "LUNAS") {
+      const dpAmount = totalAmount * 0.2;
+      const fullAmount = totalAmount * 0.8;
+      // Ensure DP is also recorded in case they skipped APPROVED
+      await prismaModule.prisma.paymentTransaction.upsert({
+        where: { uniqueKey: `${booking.id}-DP` },
+        update: {},
+        create: {
+          bookingId: booking.id,
+          type: "DP",
+          amount: dpAmount,
+          uniqueKey: `${booking.id}-DP`,
+        },
+      });
+      // Record FULL payment
+      await prismaModule.prisma.paymentTransaction.upsert({
+        where: { uniqueKey: `${booking.id}-FULL` },
+        update: {},
+        create: {
+          bookingId: booking.id,
+          type: "FULL",
+          amount: fullAmount,
+          uniqueKey: `${booking.id}-FULL`,
+        },
+      });
+    }
+
+    // Send Telegram Notification for APPROVED, REJECTED, or LUNAS
+    if (status === "APPROVED" || status === "REJECTED" || status === "LUNAS") {
       const telegramService = new TelegramService();
       await telegramService.sendBookingStatusNotification(
         booking.client.fullName,

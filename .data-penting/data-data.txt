@@ -4,3 +4,19 @@ test token: https://api.telegram.org/bot8896532615:AAGJY_QSjpr7A7Nc3Syyk53_lcOS8
 test token update : https://api.telegram.org/bo8896532615:AAGJY_QSjpr7A7Nc3Syyk53_lcOS83sUEcw/getUpdates
 Supabase (akun github ryuseokwan)    : #Senimankamera*
 Connection Strring                   : postgresql://postgres:#Senimankamera*@db.bwxixkvkpyvcmchtilgw.supabase.co:5432/postgres
+
+Searched for "loginAction"
+Viewed login.action.ts:1-40
+Viewed seed.ts:1-225
+Listed directory .data-penting
+Viewed akun%20admin.md:1-39
+
+Berdasarkan berkas dokumentasi [akun admin.md](file:///c:/Users/Al-Azhar/Desktop/senimankamera/.data-penting/akun%20admin.md), berikut adalah kredensial login untuk akun Superadmin dan Admin Anda:
+
+### 1. Akun Superadmin
+* **Email**: `superadmin.senimankamera@gmail.com`
+* **Password**: `#SuperadminSK4888*`
+
+### 2. Akun Admin
+* **Email**: `admin.senimankamera488@gmail.com`
+* **Password**: `#Kameraseniman*`

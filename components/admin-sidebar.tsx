@@ -11,7 +11,8 @@ import {
   Settings, 
   LogOut,
   ClipboardList,
-  Tag
+  Tag,
+  FileSpreadsheet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
     { name: "Ringkasan", href: "/admin", icon: LayoutDashboard },
     { name: "Booking", href: "/admin/bookings", icon: ClipboardList },
     { name: "Kalender", href: "/admin/calendar", icon: Calendar },
+    { name: "Rekap", href: "/admin/recap", icon: FileSpreadsheet },
     { name: "Galeri", href: "/admin/galleries", icon: ImageIcon },
     { name: "Paket", href: "/admin/packages", icon: Settings },
     { name: "Kategori", href: "/admin/categories", icon: Tag },
@@ -88,26 +90,12 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
 
       {/* Sidebar Footer Actions */}
       <SidebarFooter className="border-t border-border/40 py-6 px-4 gap-4 mt-auto">
-        <Button className="w-full font-sans text-xs uppercase tracking-widest py-6 rounded-none flex items-center justify-center gap-2">
-          <Upload className="w-4 h-4" />
-          <span>Unggah Foto</span>
-        </Button>
-
         <SidebarMenu className="gap-1">
           <SidebarMenuItem>
-            <SidebarMenuButton
-              render={<Link href="#" />}
-              className="py-4 px-2 flex items-center gap-3 font-sans text-xs uppercase tracking-widest font-bold text-secondary hover:text-primary transition-colors w-full"
-            >
-              <Settings className="w-4 h-4" />
-              <span>Pengaturan</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
             <form onSubmit={handleSignOut} className="w-full">
-              <SidebarMenuButton type="submit" className="py-4 px-2 w-full text-left">
-                <span className="flex items-center gap-3 font-sans text-xs uppercase tracking-widest font-bold text-secondary hover:text-primary transition-colors w-full">
-                  <LogOut className="w-4 h-4" />
+              <SidebarMenuButton type="submit" className="py-4 px-2 w-full text-left hover:bg-red-50 dark:hover:bg-red-950/10 rounded-none">
+                <span className="flex items-center gap-3 font-sans text-xs uppercase tracking-widest font-bold text-red-600 hover:text-red-700 transition-colors w-full">
+                  <LogOut className="w-4 h-4 text-red-600" />
                   <span>Keluar</span>
                 </span>
               </SidebarMenuButton>

@@ -44,7 +44,7 @@ model Booking {
   eventName     String?
   eventLocation String?
   notes         String?
-  status        String        @default("PendingApproval")
+  status        String        @default("PENDING")
   paymentStatus String        @default("PENDING")
   snapToken     String?
   snapUrl       String?
@@ -52,6 +52,7 @@ model Booking {
   totalAmount   Float?
   source        String        @default("website") // "website" | "manual"
   calendarSlot  CalendarSlot?
+  paymentTransactions PaymentTransaction[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
@@ -82,7 +83,7 @@ model Package {
 model CalendarSlot {
   id            String   @id @default(uuid())
   date          DateTime @unique
-  status        String   // PendingApproval, Approved, ManualBooking, ManualBlock
+  status        String   // PENDING, APPROVED, REJECTED, CANCELLED, LUNAS, ManualBooking, ManualBlock
   bookingId     String?  @unique
   booking       Booking? @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   blockedReason String?
@@ -90,4 +91,15 @@ model CalendarSlot {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+model PaymentTransaction {
+  id         String   @id @default(uuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  type       String   // "DP" | "FULL"
+  amount     Float
+  uniqueKey  String   @unique  // "{bookingId}-DP" atau "{bookingId}-FULL"
+  createdAt  DateTime @default(now())
+}
+
 

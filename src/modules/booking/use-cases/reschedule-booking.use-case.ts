@@ -34,7 +34,7 @@ export class RescheduleBookingUseCase {
 
     // Create the new slot with the current booking status if it's a locking status
     const status = booking.status;
-    const isLockingStatus = ["PendingApproval", "Approved", "ManualBooking"].includes(status);
+    const isLockingStatus = ["PENDING", "APPROVED", "LUNAS", "ManualBooking"].includes(status);
     if (isLockingStatus) {
       await this.calendarRepository.upsertSlot(
         targetDate,

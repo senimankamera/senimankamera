@@ -16,6 +16,7 @@ export async function updateBookingStatusAction(id: string, status: string) {
     revalidatePath("/admin");
     revalidatePath("/admin/bookings");
     revalidatePath("/admin/calendar");
+    revalidatePath("/admin/recap");
 
     return { success: true, data: JSON.parse(JSON.stringify(result)) };
   } catch (error: any) {

@@ -206,7 +206,7 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
             <span className="text-primary font-medium">{"Rp. " + (createdBooking.totalAmount || 0).toLocaleString("id-ID")}</span>
           </div>
           <div className="flex justify-between text-sm pt-2 font-bold text-primary border-t border-border/30">
-            <span>Uang Muka (DP 50%):</span>
+            <span>Uang Muka (DP 20%):</span>
             <span>{"Rp. " + (createdBooking.dpAmount || 0).toLocaleString("id-ID")}</span>
           </div>
         </div>

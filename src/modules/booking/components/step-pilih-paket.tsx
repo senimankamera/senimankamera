@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Check, Clock, Users, BookOpen, Image as ImageIcon, MapPin, Sparkles } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CategoryItem {
@@ -47,18 +47,6 @@ export function StepPilihPaket({
     ? initialPackages.filter((pkg) => pkg.categoryId === selectedCategory)
     : [];
 
-
-
-  const renderIcon = (index: number) => {
-    const icons = [
-      <Clock key="clock" className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />,
-      <Users key="users" className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />,
-      <ImageIcon key="image" className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />,
-      <BookOpen key="book" className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />,
-      <MapPin key="map" className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-    ];
-    return icons[index % icons.length] || <Check key="check" className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />;
-  };
 
   return (
     <div className="space-y-10">
@@ -175,8 +163,8 @@ export function StepPilihPaket({
 
                         <ul className="space-y-2.5 font-sans text-[11px] text-secondary mb-6">
                           {pkg.features.map((feature, idx) => (
-                            <li key={idx} className="flex items-start gap-2">
-                              {renderIcon(idx)}
+                            <li key={idx} className="flex items-start gap-2.5">
+                              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0 mt-1.5" />
                               <span>{feature}</span>
                             </li>
                           ))}

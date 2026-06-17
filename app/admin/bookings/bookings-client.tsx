@@ -51,12 +51,13 @@ interface Booking {
 
 interface BookingsClientProps {
   initialBookings: Booking[];
+  initialStatusFilter?: string;
 }
 
-export function BookingsClient({ initialBookings }: BookingsClientProps) {
+export function BookingsClient({ initialBookings, initialStatusFilter }: BookingsClientProps) {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(initialStatusFilter || "all");
   const [monthFilter, setMonthFilter] = useState("all");
   const [yearFilter, setYearFilter] = useState("all");
 
@@ -156,18 +157,21 @@ export function BookingsClient({ initialBookings }: BookingsClientProps) {
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "PendingApproval":
+    switch (status.toUpperCase()) {
+      case "PENDING":
+      case "PENDINGAPPROVAL":
         return <Badge className="bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Pending</Badge>;
-      case "Approved":
+      case "APPROVED":
         return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Approved</Badge>;
-      case "Rejected":
+      case "REJECTED":
         return <Badge className="bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Rejected</Badge>;
-      case "Cancelled":
+      case "CANCELLED":
         return <Badge className="bg-neutral-100 text-neutral-800 border-neutral-200 dark:bg-neutral-950/20 dark:text-neutral-400 dark:border-neutral-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Cancelled</Badge>;
-      case "Completed":
-        return <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Completed</Badge>;
-      case "ManualBooking":
+      case "LUNAS":
+      case "PAID":
+      case "COMPLETED":
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Lunas</Badge>;
+      case "MANUALBOOKING":
         return <Badge className="bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Manual</Badge>;
       default:
         return <Badge className="uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">{status}</Badge>;
@@ -219,11 +223,11 @@ export function BookingsClient({ initialBookings }: BookingsClientProps) {
               className="w-full border border-border/40 px-3 py-2.5 text-xs bg-background text-foreground focus:outline-none cursor-pointer"
             >
               <option value="all">Semua Status</option>
-              <option value="PendingApproval">Pending Approval</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-              <option value="Cancelled">Cancelled</option>
-              <option value="Completed">Completed</option>
+              <option value="PENDING">Pending Approval</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="CANCELLED">Cancelled</option>
+              <option value="LUNAS">Lunas</option>
             </select>
           </div>
 
@@ -322,12 +326,12 @@ export function BookingsClient({ initialBookings }: BookingsClientProps) {
                         <Eye className="w-4 h-4" />
                       </Button>
 
-                      {booking.status === "PendingApproval" && (
+                      {booking.status === "PENDING" && (
                         <>
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => handleStatusUpdate(booking.id, "Approved")}
+                            onClick={() => handleStatusUpdate(booking.id, "APPROVED")}
                             className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-100"
                             title="Setujui Booking"
                           >
@@ -336,7 +340,7 @@ export function BookingsClient({ initialBookings }: BookingsClientProps) {
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => handleStatusUpdate(booking.id, "Rejected")}
+                            onClick={() => handleStatusUpdate(booking.id, "REJECTED")}
                             className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-100"
                             title="Tolak Booking"
                           >
@@ -345,21 +349,21 @@ export function BookingsClient({ initialBookings }: BookingsClientProps) {
                         </>
                       )}
 
-                      {booking.status === "Approved" && (
+                      {booking.status === "APPROVED" && (
                         <>
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => handleStatusUpdate(booking.id, "Completed")}
-                            className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 border-indigo-100"
-                            title="Tandai Selesai"
+                            onClick={() => handleStatusUpdate(booking.id, "LUNAS")}
+                            className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-100"
+                            title="Tandai Lunas"
                           >
                             <CheckCircle2 className="w-4 h-4" />
                           </Button>
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => handleStatusUpdate(booking.id, "Cancelled")}
+                            onClick={() => handleStatusUpdate(booking.id, "CANCELLED")}
                             className="h-8 w-8 text-neutral-500 hover:text-neutral-600 hover:bg-neutral-50 border-neutral-200"
                             title="Batalkan Booking"
                           >
@@ -495,17 +499,17 @@ export function BookingsClient({ initialBookings }: BookingsClientProps) {
 
             {/* Quick Actions Panel */}
             <div className="border-t border-border/20 pt-6 flex flex-wrap gap-2 justify-end">
-              {selectedBooking.status === "PendingApproval" && (
+              {selectedBooking.status === "PENDING" && (
                 <>
                   <Button
-                    onClick={() => handleStatusUpdate(selectedBooking.id, "Approved")}
+                    onClick={() => handleStatusUpdate(selectedBooking.id, "APPROVED")}
                     disabled={isPending}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-none font-sans text-xs uppercase tracking-wider py-5"
                   >
                     Setujui
                   </Button>
                   <Button
-                    onClick={() => handleStatusUpdate(selectedBooking.id, "Rejected")}
+                    onClick={() => handleStatusUpdate(selectedBooking.id, "REJECTED")}
                     disabled={isPending}
                     variant="outline"
                     className="border-rose-200 text-rose-600 hover:bg-rose-50 rounded-none font-sans text-xs uppercase tracking-wider py-5"
@@ -515,17 +519,17 @@ export function BookingsClient({ initialBookings }: BookingsClientProps) {
                 </>
               )}
 
-              {selectedBooking.status === "Approved" && (
+              {selectedBooking.status === "APPROVED" && (
                 <>
                   <Button
-                    onClick={() => handleStatusUpdate(selectedBooking.id, "Completed")}
+                    onClick={() => handleStatusUpdate(selectedBooking.id, "LUNAS")}
                     disabled={isPending}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-none font-sans text-xs uppercase tracking-wider py-5"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-none font-sans text-xs uppercase tracking-wider py-5"
                   >
-                    Selesai
+                    Tandai Lunas
                   </Button>
                   <Button
-                    onClick={() => handleStatusUpdate(selectedBooking.id, "Cancelled")}
+                    onClick={() => handleStatusUpdate(selectedBooking.id, "CANCELLED")}
                     disabled={isPending}
                     variant="outline"
                     className="border-neutral-200 text-neutral-600 hover:bg-neutral-50 rounded-none font-sans text-xs uppercase tracking-wider py-5"

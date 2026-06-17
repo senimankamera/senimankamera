@@ -3,18 +3,11 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { BookingRepository } from "@/src/modules/booking/repositories/booking.repository";
 import { createClient } from "@/src/infrastructure/supabase/server";
-import { BookingsClient } from "./bookings-client";
+import { RecapClient } from "./recap-client";
 
 export const revalidate = 0;
 
-export default async function AdminBookingsPage({
-  searchParams,
-}: {
-  searchParams: any;
-}) {
-  const resolvedParams = searchParams ? (typeof searchParams.then === 'function' ? await searchParams : searchParams) : {};
-  const initialStatusFilter = resolvedParams.status || "";
-
+export default async function AdminRecapPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -24,12 +17,11 @@ export default async function AdminBookingsPage({
   }
 
   const bookingRepository = new BookingRepository();
-  const rawBookings = await bookingRepository.findAllBookings({});
+  const rawBookings = await bookingRepository.getRecapData();
 
-  // Serialize dates for Client Component safety
+  // Serialize bookings and their payment transactions for Client Component safety
   const bookings = rawBookings.map((b: any) => ({
     id: b.id,
-    clientId: b.clientId,
     client: {
       fullName: b.client.fullName,
       email: b.client.email,
@@ -42,7 +34,14 @@ export default async function AdminBookingsPage({
     eventLocation: b.eventLocation,
     notes: b.notes,
     status: b.status,
-    source: b.source,
+    totalAmount: b.totalAmount || 0,
+    dpAmount: b.dpAmount || 0,
+    paymentTransactions: b.paymentTransactions.map((t: any) => ({
+      id: t.id,
+      type: t.type,
+      amount: t.amount,
+      createdAt: t.createdAt.toISOString(),
+    })),
     createdAt: b.createdAt.toISOString(),
   }));
 
@@ -57,7 +56,7 @@ export default async function AdminBookingsPage({
             <span className="font-serif tracking-tighter font-semibold md:hidden">Admin</span>
             <div className="hidden md:block">
               <span className="font-sans text-[10px] uppercase tracking-widest text-secondary font-bold">
-                Manajemen Studio Seniman Kamera
+                Rekap Keuangan & Pesanan Seniman Kamera
               </span>
             </div>
           </div>
@@ -65,7 +64,7 @@ export default async function AdminBookingsPage({
 
         {/* Content Container */}
         <main className="flex-1 px-6 md:px-12 py-10 max-w-[1200px] mx-auto w-full">
-          <BookingsClient initialBookings={bookings} initialStatusFilter={initialStatusFilter} />
+          <RecapClient bookings={bookings} />
         </main>
       </SidebarInset>
     </SidebarProvider>

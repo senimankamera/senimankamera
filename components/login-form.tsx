@@ -40,7 +40,7 @@ export function LoginForm({
             id="email"
             name="email"
             type="email"
-            placeholder="admin@senimankamera.com"
+            placeholder="nama@email.com"
             required
             className="rounded-none border-border focus:border-primary focus-visible:ring-0"
           />

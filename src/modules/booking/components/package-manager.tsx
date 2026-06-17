@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { createPackageAction, deletePackageAction } from "../actions/package-admin.action";
-import { Trash2, Plus, Settings, AlertCircle, Sparkles } from "lucide-react";
+import { Trash2, Plus, Settings, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/components/modal-provider";
 
@@ -249,8 +249,8 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
 
                         <ul className="space-y-2 font-sans text-[11px] text-secondary">
                           {pkg.features.map((feature, idx) => (
-                            <li key={idx} className="flex items-center gap-2">
-                              <Sparkles className="w-3 h-3 text-secondary flex-shrink-0" />
+                            <li key={idx} className="flex items-start gap-2.5">
+                              <span className="w-1 h-1 rounded-full bg-primary flex-shrink-0 mt-1.5" />
                               <span>{feature}</span>
                             </li>
                           ))}

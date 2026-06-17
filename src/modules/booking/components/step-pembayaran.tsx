@@ -34,7 +34,7 @@ export function StepPembayaran({
   onSubmit,
   onBack,
 }: StepPembayaranProps) {
-  const dpAmount = packagePrice * 0.5;
+  const dpAmount = packagePrice * 0.2;
 
   const formattedDate = new Date(bookingDate).toLocaleDateString("id-ID", {
     day: "numeric",
@@ -124,9 +124,9 @@ export function StepPembayaran({
                   <Check className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-[10px] uppercase tracking-wider font-bold text-primary">Opsi Pembayaran Terpilih</span>
-                <span className="text-xs font-semibold text-primary">Uang Muka (DP 50%)</span>
+                <span className="text-xs font-semibold text-primary">Uang Muka (DP 20%)</span>
                 <p className="text-[11px] text-secondary/70 leading-normal">
-                  Pembayaran DP 50% dilakukan melalui website. Pelunasan sisa 50% dibayarkan di luar website (setelah sesi foto selesai).
+                  Pembayaran DP 20% dilakukan melalui website. Pelunasan sisa 80% dibayarkan di luar website (setelah sesi foto selesai).
                 </p>
               </div>
 
@@ -136,7 +136,7 @@ export function StepPembayaran({
                   <span>{"Rp. " + packagePrice.toLocaleString("id-ID")}</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold text-primary border-t border-dashed border-border/25 pt-2">
-                  <span>Uang Muka (DP 50%):</span>
+                  <span>Uang Muka (DP 20%):</span>
                   <span>{"Rp. " + dpAmount.toLocaleString("id-ID")}</span>
                 </div>
               </div>
