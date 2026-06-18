@@ -11,11 +11,21 @@ async function BookingFormContainer() {
   const bookingRepository = new BookingRepository();
   const categoryRepository = new CategoryRepository();
 
-  const [packages, bookedDatesInfo, categories] = await Promise.all([
-    packageRepository.findAll(),
-    bookingRepository.getBookingsCalendarInfo(),
-    categoryRepository.findAll(),
-  ]);
+  let packages = [];
+  let bookedDatesInfo = [];
+  let categories = [];
+  try {
+    const [resPackages, resBookedDatesInfo, resCategories] = await Promise.all([
+      packageRepository.findAll(),
+      bookingRepository.getBookingsCalendarInfo(),
+      categoryRepository.findAll(),
+    ]);
+    packages = resPackages;
+    bookedDatesInfo = resBookedDatesInfo;
+    categories = resCategories;
+  } catch (error) {
+    console.error("Failed to fetch booking form data:", error);
+  }
 
   const plainPackages = packages.map((p: any) => ({
     id: p.id,

@@ -7,7 +7,12 @@ export const revalidate = 0; // Disable static cache to reflect database changes
 export default async function PortfolioPage() {
   const repository = new GalleryRepository();
   const getGalleriesUseCase = new GetGalleriesUseCase(repository);
-  const items = await getGalleriesUseCase.execute();
+  let items = [];
+  try {
+    items = await getGalleriesUseCase.execute();
+  } catch (error) {
+    console.error("Failed to fetch portfolio galleries:", error);
+  }
 
   return <PortfolioGrid initialItems={items} />;
 }

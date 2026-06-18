@@ -11,10 +11,18 @@ export default async function ServicesPage() {
 
   const getPackagesUseCase = new GetPackagesUseCase(repository);
 
-  const [packages, categories] = await Promise.all([
-    getPackagesUseCase.execute(),
-    categoryRepository.findAll(),
-  ]);
+  let packages = [];
+  let categories = [];
+  try {
+    const [resPackages, resCategories] = await Promise.all([
+      getPackagesUseCase.execute(),
+      categoryRepository.findAll(),
+    ]);
+    packages = resPackages;
+    categories = resCategories;
+  } catch (error) {
+    console.error("Failed to fetch packages and categories:", error);
+  }
 
   const serializedPackages = JSON.parse(JSON.stringify(packages));
   const serializedCategories = JSON.parse(JSON.stringify(categories));
