@@ -123,12 +123,7 @@ export function PortfolioGrid({ initialItems, categories: dbCategories }: Portfo
         ))}
       </section>
 
-      {/* Load More Action */}
-      <div className="flex justify-center mt-16">
-        <button className="border border-primary text-primary bg-transparent font-sans text-xs uppercase tracking-widest px-8 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors font-bold rounded-none cursor-pointer">
-          Lihat Lebih Banyak Karya
-        </button>
-      </div>
+
     </div>
   );
 }
