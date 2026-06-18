@@ -123,7 +123,7 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
     };
   }, []);
 
-  // Pre-fill packageType from query param and auto advance to step 2
+  // Pre-fill packageType from query param
   useEffect(() => {
     const pkg = searchParams.get("package");
     if (pkg) {
@@ -144,9 +144,6 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
             setEventLocation((prev) => (prev === "" ? "Studio" : prev));
           }
         }
-        
-        // Automatically skip step 1 to let user directly choose their date/time
-        setCurrentStep(2);
       }
     }
   }, [searchParams, initialPackages, categories]);
