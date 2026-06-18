@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createBookingAction } from "../actions/create-booking.action";
 import { getBookedDatesWithInfoAction } from "../actions/get-booked-dates-with-info.action";
+import { cancelPendingBookingAction } from "../actions/cancel-pending-booking.action";
 import { CreateBookingSchema } from "../schemas/create-booking.schema";
 import { AlertCircle, CheckCircle2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ interface CategoryItem {
   name: string;
   label: string;
   description: string | null;
+  bookingType?: string;
 }
 
 interface PackageItem {
@@ -30,6 +32,7 @@ interface PackageItem {
   price: number;
   features: string[];
   description: string | null;
+  sessionDuration: number | null;
 }
 
 interface BookedDateInfo {
@@ -66,12 +69,28 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
 
   // States
   const [bookedDates, setBookedDates] = useState<BookedDateInfo[]>(bookedDatesInfo || []);
+  const [selectedCategoryBookingType, setSelectedCategoryBookingType] = useState("DATE_ONLY");
+  const [selectedSessionDuration, setSelectedSessionDuration] = useState<number | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [createdBooking, setCreatedBooking] = useState<{
     id: string;
     dpAmount: number | null;
     totalAmount: number | null;
   } | null>(null);
+  const [activeSnapToken, setActiveSnapToken] = useState("");
+  const [activeSnapUrl, setActiveSnapUrl] = useState("");
+
+  // Helper to calculate end time based on session duration
+  const calculateEndTime = (startTime: string, durationMinutes: number) => {
+    if (!startTime) return "";
+    const [hours, mins] = startTime.split(":").map(Number);
+    const date = new Date();
+    date.setHours(hours, mins, 0, 0);
+    date.setMinutes(date.getMinutes() + durationMinutes);
+    const h = String(date.getHours()).padStart(2, "0");
+    const m = String(date.getMinutes()).padStart(2, "0");
+    return `${h}:${m}`;
+  };
 
   // Fetch updated booked dates client-side
   useEffect(() => {
@@ -82,6 +101,26 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
       }
     }
     loadBookedDates();
+  }, []);
+
+  // Dynamically load Midtrans Snap JS SDK
+  useEffect(() => {
+    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "Mid-client-_k7eRgttHZuqM1mq";
+    const isSandbox = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION !== "true";
+    const snapScriptUrl = isSandbox
+      ? "https://app.sandbox.midtrans.com/snap/snap.js"
+      : "https://app.midtrans.com/snap/snap.js";
+
+    // Add script tag to body
+    const script = document.createElement("script");
+    script.src = snapScriptUrl;
+    script.setAttribute("data-client-key", clientKey);
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
   }, []);
 
   // Pre-fill packageType from query param
@@ -108,11 +147,58 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
 
   const handleBack = () => {
     setServerError(null);
+    if (createdBooking?.id) {
+      handleCancelPayment();
+    }
     setCurrentStep((prev) => prev - 1);
+  };
+
+  const handleCancelPayment = async () => {
+    if (!createdBooking?.id) return;
+
+    setServerError(null);
+    startTransition(async () => {
+      const response = await cancelPendingBookingAction(createdBooking.id);
+      if (response.success) {
+        setActiveSnapToken("");
+        setActiveSnapUrl("");
+        setCreatedBooking(null);
+      } else {
+        setServerError(response.error || "Gagal membatalkan pembayaran sebelumnya. Silakan coba kembali.");
+      }
+    });
   };
 
   const handleSubmitBooking = async () => {
     setServerError(null);
+
+    // If we already have a snap token, just re-launch payment popup
+    if (activeSnapToken) {
+      if ((window as any).snap) {
+        (window as any).snap.pay(activeSnapToken, {
+          onSuccess: function (result: any) {
+            setCurrentStep(5);
+          },
+          onPending: function (result: any) {
+            setServerError("Pembayaran Anda sedang tertunda. Silakan selesaikan transfer bank Anda, atau klik tombol 'Bayar Sekarang' di bawah untuk membuka kembali detail instruksi pembayaran.");
+          },
+          onError: function (result: any) {
+            setServerError("Pembayaran gagal. Silakan coba kembali.");
+          },
+          onClose: function () {
+            setServerError("Pembayaran belum diselesaikan. Anda dapat mencoba kembali dengan mengklik tombol di bawah.");
+          },
+        });
+      } else if (activeSnapUrl) {
+        window.location.href = activeSnapUrl;
+      }
+      return;
+    }
+
+    const isTimeBased = selectedCategoryBookingType === "TIME_BASED";
+    const finalEventTime = eventTime;
+    const finalEventName = eventName || (isTimeBased ? "Foto Studio Session" : "");
+    const finalEventLocation = eventLocation || (isTimeBased ? "Studio" : "");
 
     const formData = {
       fullName,
@@ -120,11 +206,12 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
       phoneNumber,
       packageType,
       bookingDate,
-      eventTime,
-      eventName,
-      eventLocation,
+      eventTime: finalEventTime,
+      eventName: finalEventName,
+      eventLocation: finalEventLocation,
       notes,
       paymentType: "dp" as const,
+      sessionStartTime: isTimeBased ? eventTime : undefined,
     };
 
     // Client-side validation using Zod
@@ -139,12 +226,41 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
     startTransition(async () => {
       const response = await createBookingAction(validation.data);
       if (response.success && response.data) {
+        const bookingData = response.data;
+        const snapToken = bookingData.snapToken;
+        const snapUrl = bookingData.snapUrl;
+
+        // Save states for potential retry
         setCreatedBooking({
-          id: response.data.id,
-          dpAmount: response.data.dpAmount,
-          totalAmount: response.data.totalAmount,
+          id: bookingData.id,
+          dpAmount: bookingData.dpAmount,
+          totalAmount: bookingData.totalAmount,
         });
-        setCurrentStep(5); // Success step
+        setActiveSnapToken(snapToken || "");
+        setActiveSnapUrl(snapUrl || "");
+
+        // If Midtrans Snap is loaded, trigger the checkout modal popup
+        if (snapToken && (window as any).snap) {
+          (window as any).snap.pay(snapToken, {
+            onSuccess: function (result: any) {
+              setCurrentStep(5);
+            },
+            onPending: function (result: any) {
+              setServerError("Pembayaran Anda sedang tertunda. Silakan selesaikan transfer bank Anda, atau klik tombol 'Bayar Sekarang' di bawah untuk membuka kembali detail instruksi pembayaran.");
+            },
+            onError: function (result: any) {
+              setServerError("Pembayaran gagal. Silakan coba kembali.");
+            },
+            onClose: function () {
+              setServerError("Pembayaran belum diselesaikan. Anda dapat mencoba kembali dengan mengklik tombol di bawah.");
+            },
+          });
+        } else if (snapUrl) {
+          // Fallback redirect if script not fully loaded
+          window.location.href = snapUrl;
+        } else {
+          setCurrentStep(5);
+        }
       } else {
         setServerError(response.error || "Gagal mengirim pesanan booking.");
       }
@@ -198,7 +314,9 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
           <div className="flex justify-between">
             <span className="text-secondary">Waktu & Lokasi:</span>
             <span className="text-primary font-medium text-right max-w-[200px] truncate" title={eventLocation}>
-              {eventTime} WIB - {eventLocation}
+              {selectedCategoryBookingType === "TIME_BASED" && selectedSessionDuration
+                ? `${eventTime} – ${calculateEndTime(eventTime, selectedSessionDuration)}`
+                : eventTime} WIB - {selectedCategoryBookingType === "TIME_BASED" ? "Studio" : eventLocation}
             </span>
           </div>
           <div className="flex justify-between pt-2 border-t border-dashed border-border/30">
@@ -206,7 +324,11 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
             <span className="text-primary font-medium">{"Rp. " + (createdBooking.totalAmount || 0).toLocaleString("id-ID")}</span>
           </div>
           <div className="flex justify-between text-sm pt-2 font-bold text-primary border-t border-border/30">
-            <span>Uang Muka (DP 20%):</span>
+            <span>
+              {selectedCategoryBookingType === "TIME_BASED"
+                ? "Uang Muka (DP Flat):"
+                : "Uang Muka (DP 20%):"}
+            </span>
             <span>{"Rp. " + (createdBooking.dpAmount || 0).toLocaleString("id-ID")}</span>
           </div>
         </div>
@@ -278,7 +400,12 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
       </div>
 
       {serverError && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 text-red-800 dark:text-red-300 font-sans text-xs flex items-center gap-2.5">
+        <div className={cn(
+          "mb-6 p-4 font-sans text-xs flex items-center gap-2.5 border",
+          serverError.includes("tertunda")
+            ? "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/30 text-amber-800 dark:text-amber-300"
+            : "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/30 text-red-800 dark:text-red-300"
+        )}>
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{serverError}</span>
         </div>
@@ -292,6 +419,14 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
             categories={categories}
             selectedPackageName={packageType}
             onSelectPackage={setPackageType}
+            onCategoryChange={(bookingType, sessionDuration) => {
+              setSelectedCategoryBookingType(bookingType);
+              setSelectedSessionDuration(sessionDuration);
+              if (bookingType === "TIME_BASED") {
+                setEventName((prev) => prev === "" ? "Foto Studio Session" : prev);
+                setEventLocation((prev) => prev === "" ? "Studio" : prev);
+              }
+            }}
             onNext={handleNext}
           />
         )}
@@ -303,6 +438,10 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
             selectedTime={eventTime}
             onSelectDate={setBookingDate}
             onSelectTime={setEventTime}
+            bookingType={selectedCategoryBookingType}
+            sessionDuration={selectedSessionDuration}
+            packageName={packageType}
+            categoryName={selectedPackageObj?.category?.label || selectedPackageObj?.category?.name}
             onNext={handleNext}
             onBack={handleBack}
           />
@@ -334,7 +473,11 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
             packageName={packageType}
             packagePrice={packagePrice}
             bookingDate={bookingDate}
-            eventTime={eventTime}
+            eventTime={
+              selectedCategoryBookingType === "TIME_BASED" && selectedSessionDuration
+                ? `${eventTime} – ${calculateEndTime(eventTime, selectedSessionDuration)}`
+                : eventTime
+            }
             fullName={fullName}
             email={email}
             phoneNumber={phoneNumber}
@@ -342,8 +485,11 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
             eventLocation={eventLocation}
             notes={notes}
             isPending={isPending}
+            bookingType={selectedCategoryBookingType}
             onSubmit={handleSubmitBooking}
             onBack={handleBack}
+            isPayRetry={!!activeSnapToken}
+            onCancelPayment={handleCancelPayment}
           />
         )}
       </div>

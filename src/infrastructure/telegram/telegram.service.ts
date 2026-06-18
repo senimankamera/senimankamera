@@ -13,12 +13,15 @@ export class TelegramService {
     fullName: string;
     email: string;
     phoneNumber?: string;
+    categoryName?: string;
     packageType: string;
     bookingDate: Date;
     eventTime?: string;
     eventName?: string;
     eventLocation?: string;
     notes?: string;
+    dpAmount?: number;
+    totalAmount?: number;
   }) {
     if (!this.token || !this.chatId) {
       console.log("Skipping Telegram notification because bot token or chat ID is not configured.");
@@ -29,21 +32,31 @@ export class TelegramService {
       dateStyle: "full",
     }).format(booking.bookingDate);
 
+    const formattedDP = booking.dpAmount 
+      ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(booking.dpAmount)
+      : "-";
+    const formattedTotal = booking.totalAmount 
+      ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(booking.totalAmount)
+      : "-";
+
+    const paketLabel = booking.categoryName
+      ? `${booking.categoryName} · ${booking.packageType}`
+      : booking.packageType;
+
     const message = `
-📸 <b>PESANAN BOOKING BARU</b> 📸
+📸 <b>ADA PESANAN BARU</b> 📸
 ----------------------------------
 👤 <b>Nama Klien:</b> ${booking.fullName}
 📧 <b>Email:</b> ${booking.email}
 📞 <b>No. HP / WA:</b> ${booking.phoneNumber || "-"}
-📦 <b>Paket Event:</b> ${booking.packageType}
+📦 <b>Paket Event:</b> ${paketLabel}
 📅 <b>Tanggal Booking:</b> ${formattedDate}
 ⏰ <b>Waktu Acara:</b> ${booking.eventTime || "-"}
 🎉 <b>Nama Acara:</b> ${booking.eventName || "-"}
 📍 <b>Lokasi Acara:</b> ${booking.eventLocation || "-"}
-💰 <b>Jenis Pembayaran:</b> DP 20%
+💰 <b>Uang Muka (DP):</b> ${formattedDP} <b>(TELAH DI BAYAR)</b> dari Total: ${formattedTotal}
 📝 <b>Catatan Vision:</b> ${booking.notes || "-"}
 ----------------------------------
-<i>Silakan tinjau dan konfirmasi di Admin Dashboard.</i>
 `;
 
     const url = `https://api.telegram.org/bot${this.token}/sendMessage`;

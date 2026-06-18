@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ interface CategoryItem {
   name: string;
   label: string;
   description: string | null;
+  bookingType?: string;
 }
 
 interface PackageItem {
@@ -20,6 +21,7 @@ interface PackageItem {
   price: number;
   features: string[];
   description: string | null;
+  sessionDuration: number | null;
 }
 
 interface StepPilihPaketProps {
@@ -27,6 +29,7 @@ interface StepPilihPaketProps {
   categories: CategoryItem[];
   selectedPackageName: string;
   onSelectPackage: (packageName: string) => void;
+  onCategoryChange?: (bookingType: string, sessionDuration: number | null) => void;
   onNext: () => void;
 }
 
@@ -35,6 +38,7 @@ export function StepPilihPaket({
   categories,
   selectedPackageName,
   onSelectPackage,
+  onCategoryChange,
   onNext,
 }: StepPilihPaketProps) {
   // Find category of currently selected package (if any)
@@ -47,6 +51,26 @@ export function StepPilihPaket({
     ? initialPackages.filter((pkg) => pkg.categoryId === selectedCategory)
     : [];
 
+  // Notify parent on load or when selection is updated
+  useEffect(() => {
+    if (selectedPackageName) {
+      const pkg = initialPackages.find(p => p.name === selectedPackageName);
+      if (pkg) {
+        const cat = categories.find(c => c.id === pkg.categoryId);
+        if (onCategoryChange) {
+          onCategoryChange(cat?.bookingType || "DATE_ONLY", pkg.sessionDuration || null);
+        }
+      }
+    }
+  }, [selectedPackageName, initialPackages, categories, onCategoryChange]);
+
+  const handleSelectPackageLocal = (pkg: PackageItem) => {
+    onSelectPackage(pkg.name);
+    const cat = categories.find(c => c.id === pkg.categoryId);
+    if (onCategoryChange) {
+      onCategoryChange(cat?.bookingType || "DATE_ONLY", pkg.sessionDuration || null);
+    }
+  };
 
   return (
     <div className="space-y-10">
@@ -77,8 +101,18 @@ export function StepPilihPaket({
               )}
             >
               <div>
-                <h3 className="font-serif text-base font-medium leading-tight mb-2">
+                <h3 className="font-serif text-base font-medium leading-tight mb-2 flex items-center gap-1.5 flex-wrap">
                   {cat.label}
+                  {cat.bookingType === "TIME_BASED" && (
+                    <span className={cn(
+                      "font-sans text-[8px] uppercase tracking-wider px-1.5 py-0.5 font-bold border",
+                      isSelected 
+                        ? "bg-primary-foreground text-primary border-primary-foreground" 
+                        : "bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-900/30"
+                    )}>
+                      Multi-Sesi
+                    </span>
+                  )}
                 </h3>
                 {cat.description && (
                   <p className={cn(
@@ -133,7 +167,7 @@ export function StepPilihPaket({
                   return (
                     <div
                       key={pkg.id}
-                      onClick={() => onSelectPackage(pkg.name)}
+                      onClick={() => handleSelectPackageLocal(pkg)}
                       className={cn(
                         "border p-6 transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[350px] rounded-none bg-card relative",
                         isSelected
@@ -148,8 +182,13 @@ export function StepPilihPaket({
                       )}
                       
                       <div>
-                        <h4 className="font-serif text-xl text-primary mb-2 font-medium">
+                        <h4 className="font-serif text-xl text-primary mb-2 font-medium flex items-center gap-2 flex-wrap">
                           {pkg.name}
+                          {pkg.sessionDuration && (
+                            <span className="font-sans text-[8px] uppercase tracking-wider px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-900/30">
+                              {pkg.sessionDuration} Menit
+                            </span>
+                          )}
                         </h4>
                         {pkg.description && (
                           <p className="font-sans text-xs text-secondary mb-4 font-light leading-relaxed">

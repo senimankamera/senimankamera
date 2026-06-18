@@ -8,11 +8,13 @@ export const CreateBookingSchema = z.object({
   bookingDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Jadwal tanggal tidak valid",
   }),
-  eventTime: z.string().min(1, "Waktu acara harus diisi"),
-  eventName: z.string().min(2, "Nama acara harus diisi"),
-  eventLocation: z.string().min(2, "Lokasi acara harus diisi"),
+  eventTime: z.string().optional().or(z.literal("")),
+  eventName: z.string().optional().or(z.literal("")),
+  eventLocation: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
   paymentType: z.enum(["dp"]),
+  sessionStartTime: z.string().optional(),
+  sessionEndTime: z.string().optional(),
 });
 
 export type CreateBookingInputType = z.infer<typeof CreateBookingSchema>;

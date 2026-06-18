@@ -46,5 +46,30 @@ export class GalleryRepository {
       where: { id },
     });
   }
+
+  async findById(id: number) {
+    return prisma.gallery.findUnique({
+      where: { id },
+    });
+  }
+
+  async updateGallery(id: number, data: {
+    title: string;
+    category: string;
+    subCategory: string;
+    aspect: string;
+    description?: string;
+    imageUrl?: string;
+    mediaType?: string;
+    storagePath?: string;
+    fileSize?: number;
+    width?: number;
+    height?: number;
+  }) {
+    return prisma.gallery.update({
+      where: { id },
+      data,
+    });
+  }
 }
 

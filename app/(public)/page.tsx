@@ -57,7 +57,7 @@ export default async function HomePage() {
         <div
           className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 hover:scale-105"
           style={{
-            backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKcz3-h3Ge1adEgwY8BpxxJOzbgox6iXFD399PE_qgiJNgT95ONT2RQlmI8vKez4oHOUcfTPIZrqGcSvlptY6neSsNHSwocM6TpmSJ41xcEVSqBclpUCb2ZMiAONCyQuoxASh4r_5zDdMNili5qEGpUpu7S8dRwcJUZAg_594vugUzJeCuUTx2_TJeEnNRTVxeL5wZ_lJxP4novr3aFSyJos4GPXcI1CC-v1NDTOdM4HHay5LOUoxqk2JBUpascNBWojzUde-OyBO1')`
+            backgroundImage: `url('/logo.png')`
           }}
         />
         {/* Dark Vignette Overlay */}

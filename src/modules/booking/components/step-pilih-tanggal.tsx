@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Info, Clock, Calendar as CalendarIcon } from "lucide-react";
@@ -10,6 +10,9 @@ interface BookedDateInfo {
   eventName: string;
   clientName: string;
   status: string;
+  sessionStartTime?: string | null;
+  sessionEndTime?: string | null;
+  eventTime?: string | null;
 }
 
 interface StepPilihTanggalProps {
@@ -20,6 +23,10 @@ interface StepPilihTanggalProps {
   onSelectTime: (time: string) => void;
   onNext: () => void;
   onBack: () => void;
+  bookingType: string;
+  sessionDuration: number | null;
+  packageName?: string;
+  categoryName?: string;
 }
 
 export function StepPilihTanggal({
@@ -30,6 +37,10 @@ export function StepPilihTanggal({
   onSelectTime,
   onNext,
   onBack,
+  bookingType,
+  sessionDuration,
+  packageName,
+  categoryName,
 }: StepPilihTanggalProps) {
   const [currentDate, setCurrentDate] = useState(() => {
     if (selectedDate) {
@@ -37,6 +48,11 @@ export function StepPilihTanggal({
     }
     return new Date();
   });
+
+  // Time-based category slot states
+  const [bookedSlots, setBookedSlots] = useState<{ startTime: string; endTime: string; status: string }[]>([]);
+  const [isFetchingSlots, setIsFetchingSlots] = useState(false);
+  const [isDayBlocked, setIsDayBlocked] = useState(false);
 
   const today = useMemo(() => {
     const d = new Date();
@@ -50,6 +66,59 @@ export function StepPilihTanggal({
       year: "numeric",
     });
   }, [currentDate]);
+
+  // Load booked slots dynamically when date is selected
+  useEffect(() => {
+    if (selectedDate) {
+      const loadSlots = async () => {
+        setIsFetchingSlots(true);
+        try {
+          const { getTimeSlotsAction } = await import("../actions/get-time-slots.action");
+          const response = await getTimeSlotsAction(selectedDate);
+          if (response.success && response.data) {
+            setBookedSlots(response.data.slots);
+            setIsDayBlocked(response.data.isBlocked);
+          } else {
+            setBookedSlots([]);
+            setIsDayBlocked(false);
+          }
+        } catch (error) {
+          console.error("Gagal memuat slot waktu:", error);
+        } finally {
+          setIsFetchingSlots(false);
+        }
+      };
+      loadSlots();
+    } else {
+      setBookedSlots([]);
+      setIsDayBlocked(false);
+    }
+  }, [selectedDate]);
+
+  // Helper to calculate end time based on session duration
+  const calculateEndTime = (startTime: string, durationMinutes: number) => {
+    if (!startTime) return "";
+    const [hours, mins] = startTime.split(":").map(Number);
+    const date = new Date();
+    date.setHours(hours, mins, 0, 0);
+    date.setMinutes(date.getMinutes() + durationMinutes);
+    const h = String(date.getHours()).padStart(2, "0");
+    const m = String(date.getMinutes()).padStart(2, "0");
+    return `${h}:${m}`;
+  };
+
+  // Real-time time slot overlap validation on client side
+  const isTimeSlotOverlapping = useMemo(() => {
+    if (!selectedTime || !sessionDuration || bookedSlots.length === 0) return false;
+    const newStart = selectedTime;
+    const newEnd = calculateEndTime(selectedTime, sessionDuration);
+
+    return bookedSlots.some((slot) => {
+      const existingStart = slot.startTime;
+      const existingEnd = slot.endTime;
+      return existingStart < newEnd && existingEnd > newStart;
+    });
+  }, [selectedTime, sessionDuration, bookedSlots]);
 
   // Generate days in the month
   const calendarDays = useMemo(() => {
@@ -113,23 +182,16 @@ export function StepPilihTanggal({
     return `${y}-${m}-${d}`;
   };
 
+  const isDateOnlyConflict = bookingType === "DATE_ONLY" && bookedSlots.length > 0;
+
   // Find booking status for a date
-  const getBookingForDate = (date: Date) => {
+  const getBlockingBookingForDate = (date: Date) => {
     const key = formatDateKey(date);
     return bookedDates.find((b) => {
       const bDate = new Date(b.date);
-      return formatDateKey(bDate) === key;
+      return formatDateKey(bDate) === key && (!b.sessionStartTime || b.status === "ManualBlock");
     });
   };
-
-  // Selected date's booking info
-  const selectedDateBookingInfo = useMemo(() => {
-    if (!selectedDate) return null;
-    return bookedDates.find((b) => {
-      const bDate = new Date(b.date);
-      return formatDateKey(bDate) === selectedDate;
-    });
-  }, [selectedDate, bookedDates]);
 
   const weekDays = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 
@@ -141,7 +203,7 @@ export function StepPilihTanggal({
         </span>
         <h2 className="font-serif text-2xl md:text-3xl text-primary mb-2 font-medium">Pilih Tanggal & Waktu</h2>
         <p className="font-sans text-xs text-secondary font-light leading-relaxed">
-          Pilih tanggal yang tersedia pada kalender di bawah ini, lalu tentukan waktu pelaksanaan acara.
+          Pilih tanggal yang tersedia pada kalender di bawah ini, lalu tentukan waktu pelaksanaan sesi foto Anda.
         </p>
       </div>
 
@@ -193,7 +255,7 @@ export function StepPilihTanggal({
             {calendarDays.map(({ date, isCurrentMonth, key }) => {
               const formattedKey = formatDateKey(date);
               const isPast = date < today;
-              const booking = getBookingForDate(date);
+              const blockingBooking = getBlockingBookingForDate(date);
               const isSelected = selectedDate === formattedKey;
 
               let cellStyle = "text-primary bg-transparent border-border/20";
@@ -202,8 +264,8 @@ export function StepPilihTanggal({
 
               if (isPast) {
                 cellStyle = "text-secondary/30 bg-muted/10 border-transparent cursor-not-allowed";
-              } else if (booking) {
-                const isPending = booking.status === "PendingApproval";
+              } else if (blockingBooking) {
+                const isPending = blockingBooking.status === "PendingApproval" || blockingBooking.status === "PENDING";
                 if (isPending) {
                   cellStyle = "bg-yellow-50 dark:bg-yellow-950/20 text-yellow-800 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/30 cursor-not-allowed font-semibold";
                   statusText = "Menunggu Persetujuan";
@@ -222,7 +284,7 @@ export function StepPilihTanggal({
               }
 
               const handleCellClick = () => {
-                if (isPast || booking) return;
+                if (isPast || blockingBooking) return;
                 onSelectDate(formattedKey);
               };
 
@@ -231,12 +293,12 @@ export function StepPilihTanggal({
                   key={key}
                   type="button"
                   onClick={handleCellClick}
-                  disabled={isPast || !!booking}
+                  disabled={isPast || !!blockingBooking}
                   className={cn(
                     "h-10 border text-xs font-sans rounded-none transition-all flex flex-col items-center justify-center relative",
                     cellStyle
                   )}
-                  title={booking ? `${booking.eventName} (${booking.clientName}) - ${statusText}` : undefined}
+                  title={blockingBooking ? `${blockingBooking.eventName} (${blockingBooking.clientName}) - ${statusText}` : undefined}
                 >
                   <span>{date.getDate()}</span>
                   {dotColor && (
@@ -259,9 +321,14 @@ export function StepPilihTanggal({
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 bg-red-100 border border-red-200 block rounded-none" />
-              <span>Sudah Dipesan</span>
+              <span>Sudah Dipesan (Tutup)</span>
             </div>
           </div>
+          {bookingType === "DATE_ONLY" && (
+            <p className="mt-4 text-[10px] text-secondary/80 italic leading-normal border-t border-border/10 pt-3 text-center">
+              * Beberapa tanggal mungkin tidak dapat dipesan otomatis jika sudah terisi sesi foto studio lain pada hari tersebut.
+            </p>
+          )}
         </div>
 
         {/* Date Details & Time Selector */}
@@ -282,28 +349,124 @@ export function StepPilihTanggal({
                     weekday: "long",
                   })}
                 </div>
-                <div className="text-[11px] text-green-600 font-medium">
-                  Status: Tanggal Tersedia untuk Dipesan
-                </div>
+                {!isDayBlocked && (
+                  <div className={cn(
+                    "text-[11px] font-medium",
+                    isDateOnlyConflict ? "text-amber-600 font-bold" : "text-green-600"
+                  )}>
+                    Status: {isDateOnlyConflict ? "Jadwal Terisi (Penuh)" : `Tanggal Tersedia ${bookingType === "TIME_BASED" ? "(Multi-Sesi)" : ""}`}
+                  </div>
+                )}
               </div>
 
-              {/* Input Waktu */}
-              <div className="space-y-1.5 pt-2 border-t border-border/20">
-                <label htmlFor="eventTime" className="text-[10px] uppercase tracking-wider text-secondary font-bold block">
-                  Waktu Acara (Jam) <span className="text-red-700">*</span>
-                </label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary/60" />
-                  <input
-                    type="time"
-                    id="eventTime"
-                    value={selectedTime}
-                    onChange={(e) => onSelectTime(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-transparent border border-border/40 focus:border-primary focus:outline-none transition-colors rounded-none text-primary cursor-pointer text-xs"
-                    required
-                  />
+              {isDayBlocked ? (
+                <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 text-red-800 dark:text-red-400 font-sans text-xs">
+                  Tanggal ini telah sepenuhnya diblokir oleh admin. Silakan pilih tanggal lain.
                 </div>
-              </div>
+              ) : isDateOnlyConflict ? (
+                <div className="space-y-4 pt-2 border-t border-border/20">
+                  <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 text-amber-800 dark:text-amber-400 font-sans text-xs space-y-2.5">
+                    <div className="flex items-start gap-2.5">
+                      <Info className="w-4 h-4 flex-shrink-0 text-amber-600 mt-0.5" />
+                      <div>
+                        <span className="font-bold block mb-1">Jadwal Sesi Foto Terdeteksi</span>
+                        Pada tanggal ini sudah terdapat jadwal sesi foto studio. Karena paket layanan Anda membutuhkan pemesanan satu hari penuh, pemesanan otomatis melalui website tidak tersedia untuk tanggal ini.
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const formattedBookingDate = new Date(selectedDate).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      });
+                      const categoryAndPackage = categoryName
+                        ? `${categoryName} (${packageName})`
+                        : `${packageName || 'Dokumentasi'}`;
+                      const waText = encodeURIComponent(
+                        `Halo Kak, saya ingin melakukan booking manual untuk paket "${categoryAndPackage}" pada tanggal ${formattedBookingDate}, karena di website tertulis tanggal tersebut sudah terisi oleh jadwal sesi foto studio lain (sedangkan paket saya memerlukan booking satu hari penuh). Apakah masih memungkinkan?`
+                      );
+                      window.open(`https://wa.me/6285721598190?text=${waText}`, "_blank");
+                    }}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-none font-sans text-xs uppercase tracking-wider py-3.5 h-auto whitespace-normal text-center font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                  >
+                    Jika anda tetap ingin memesan di tanggal ini Klik disini untuk hubungi Whatsapp Owner untuk booking manual (Jika Owner Mengizinkan)
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {/* Preloaded active slots for TIME_BASED bookings */}
+                  {bookingType === "TIME_BASED" && (
+                    <div className="space-y-2.5 pt-2 border-t border-border/20">
+                      <span className="text-[10px] text-secondary font-bold uppercase tracking-wider block">
+                        Jadwal Terisi pada Tanggal Ini:
+                      </span>
+                      {isFetchingSlots ? (
+                        <div className="text-[11px] text-secondary/60 animate-pulse italic py-1">
+                          Memuat jadwal terisi...
+                        </div>
+                      ) : bookedSlots.length === 0 ? (
+                        <div className="text-[11px] text-green-600/90 italic py-1 bg-green-50/50 dark:bg-green-950/10 px-2 border border-green-100 dark:border-green-900/20">
+                          Semua jam sesi masih tersedia!
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5 max-h-[120px] overflow-y-auto pr-1">
+                          {bookedSlots.map((slot, idx) => (
+                            <div
+                              key={idx}
+                              className="flex justify-between items-center bg-red-50 dark:bg-red-950/20 text-red-800 dark:text-red-400 border border-red-100 dark:border-red-900/20 px-2.5 py-1.5 text-[11px] font-medium"
+                            >
+                              <span className="flex items-center gap-1.5">
+                                <Clock className="w-3 h-3 text-red-600/60" />
+                                {slot.startTime} – {slot.endTime} WIB
+                              </span>
+                              <span className="text-[8px] uppercase tracking-wider font-bold">Terisi</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Time Input */}
+                  <div className="space-y-1.5 pt-2 border-t border-border/20">
+                    <label htmlFor="eventTime" className="text-[10px] uppercase tracking-wider text-secondary font-bold block">
+                      {bookingType === "TIME_BASED" ? "Jam Mulai Sesi" : "Waktu Acara (Jam)"} <span className="text-red-700">*</span>
+                    </label>
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary/60" />
+                      <input
+                        type="time"
+                        id="eventTime"
+                        value={selectedTime}
+                        onChange={(e) => onSelectTime(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-transparent border border-border/40 focus:border-primary focus:outline-none transition-colors rounded-none text-primary cursor-pointer text-xs"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Duration Display & Overlap Warning */}
+                  {selectedTime && bookingType === "TIME_BASED" && sessionDuration && (
+                    <div className="space-y-2.5 mt-3">
+                      <div className="text-[11px] text-primary/80 font-medium bg-primary/5 p-2.5 border border-primary/20">
+                        Rencana Sesi: <span className="font-bold">{selectedTime} WIB</span> s/d{" "}
+                        <span className="font-bold">{calculateEndTime(selectedTime, sessionDuration)} WIB</span>{" "}
+                        ({sessionDuration} menit durasi paket)
+                      </div>
+
+                      {isTimeSlotOverlapping && (
+                        <div className="p-2.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 text-red-800 dark:text-red-400 font-sans text-[11px] font-bold flex items-center gap-1.5">
+                          <Info className="w-3.5 h-3.5 flex-shrink-0 text-red-600" />
+                          <span>Waktu sesi tabrakan dengan booking lain. Silakan pilih jam lain.</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           ) : (
             <div className="border border-dashed border-border/60 p-6 text-center text-secondary font-sans text-xs leading-relaxed">
@@ -315,7 +478,7 @@ export function StepPilihTanggal({
           {/* Info Acara Terisi dalam Bulan Ini */}
           <div className="border border-border/40 bg-card p-5 space-y-3">
             <h4 className="font-serif text-xs text-primary font-semibold uppercase tracking-wider">
-              Tanggal Dipesan Bulan Ini
+              Jadwal Dipesan Bulan Ini
             </h4>
             <div className="max-h-[160px] overflow-y-auto font-sans text-[11px] space-y-2 pr-1.5">
               {bookedDates.filter((b) => {
@@ -341,17 +504,20 @@ export function StepPilihTanggal({
                       day: "numeric",
                       month: "short",
                     });
-                    const isPending = booking.status === "PendingApproval";
+                    const timeInfo = booking.sessionStartTime
+                      ? ` (${booking.sessionStartTime} – ${booking.sessionEndTime} WIB)`
+                      : " (Full Day)";
+                    const isPending = booking.status === "PendingApproval" || booking.status === "PENDING";
 
                     return (
                       <div
                         key={idx}
                         className="p-2 border border-border/20 bg-muted/10 flex flex-col gap-0.5"
                       >
-                        <div className="flex justify-between font-semibold">
-                          <span className="text-primary">{formatted}</span>
-                          <span className={isPending ? "text-yellow-600" : "text-red-600"}>
-                            {isPending ? "Menunggu Persetujuan" : "Sudah Dipesan"}
+                        <div className="flex justify-between font-semibold gap-2">
+                          <span className="text-primary truncate" title={`${formatted}${timeInfo}`}>{formatted}{timeInfo}</span>
+                          <span className={cn("shrink-0", isPending ? "text-yellow-600" : "text-red-600")}>
+                            {isPending ? "Pending" : "Booked"}
                           </span>
                         </div>
                         <div className="text-secondary font-light">
@@ -379,7 +545,7 @@ export function StepPilihTanggal({
         >
           ← Kembali
         </Button>
-        {selectedDate && selectedTime && (
+        {selectedDate && selectedTime && !isTimeSlotOverlapping && !isDayBlocked && !isDateOnlyConflict && (
           <Button
             type="button"
             onClick={onNext}

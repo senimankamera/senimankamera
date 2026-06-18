@@ -21,11 +21,13 @@ export class MidtransService {
   constructor() {
     // Fallback to a default Midtrans Sandbox Server Key if not provided in env
     this.serverKey = process.env.MIDTRANS_SERVER_KEY || "SB-Mid-server-yUtpU3q5y6s8Wj5I-V9P9JzX";
-    this.isSandbox = true; // Hardcoded to sandbox for safety and evaluation
+    this.isSandbox = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION !== "true";
   }
 
   async createSnapTransaction(input: CreateTransactionInput) {
-    const endpoint = "https://app.sandbox.midtrans.com/snap/v1/transactions";
+    const endpoint = this.isSandbox
+      ? "https://app.sandbox.midtrans.com/snap/v1/transactions"
+      : "https://app.midtrans.com/snap/v1/transactions";
     
     const authHeader = Buffer.from(`${this.serverKey}:`).toString("base64");
 
@@ -43,6 +45,10 @@ export class MidtransService {
         phone: input.customerDetails.phone,
       },
       item_details: input.itemDetails,
+      expiry: {
+        unit: "minutes",
+        duration: 15,
+      },
     };
 
     try {
@@ -70,9 +76,10 @@ export class MidtransService {
       console.error("Failed to create Midtrans Snap transaction:", error);
       // Fallback/Mock behavior in case network or credentials fail, ensuring smooth manual testing
       const mockToken = `mock-snap-token-${Date.now()}`;
+      const domain = this.isSandbox ? "app.sandbox.midtrans.com" : "app.midtrans.com";
       return {
         token: mockToken,
-        redirectUrl: `https://app.sandbox.midtrans.com/snap/v2/vtweb/${mockToken}`,
+        redirectUrl: `https://${domain}/snap/v2/vtweb/${mockToken}`,
       };
     }
   }

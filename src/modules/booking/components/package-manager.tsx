@@ -3,15 +3,17 @@
 import { useState, useTransition } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin-sidebar";
-import { createPackageAction, deletePackageAction } from "../actions/package-admin.action";
-import { Trash2, Plus, Settings, AlertCircle } from "lucide-react";
+import { createPackageAction, updatePackageAction, deletePackageAction } from "../actions/package-admin.action";
+import { Trash2, Plus, Settings, AlertCircle, Edit2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/components/modal-provider";
+import { toast } from "sonner";
 
 interface CategoryItem {
   id: string;
   name: string;
   label: string;
+  bookingType?: string;
 }
 
 interface PackageItem {
@@ -22,6 +24,7 @@ interface PackageItem {
   price: number;
   features: string[];
   description: string | null;
+  sessionDuration: number | null;
 }
 
 interface PackageManagerProps {
@@ -35,14 +38,41 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
   const { alert, confirm } = useModal();
 
   // Form States
+  const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [category, setCategory] = useState(initialCategories[0]?.id || "");
   const [price, setPrice] = useState("");
   const [features, setFeatures] = useState("");
   const [description, setDescription] = useState("");
+  const [sessionDuration, setSessionDuration] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const handleAdd = async (e: React.FormEvent) => {
+  const selectedCategoryObj = initialCategories.find((cat) => cat.id === category);
+  const isTimeBased = selectedCategoryObj?.bookingType === "TIME_BASED";
+
+  const resetForm = () => {
+    setEditId(null);
+    setName("");
+    setCategory(initialCategories[0]?.id || "");
+    setPrice("");
+    setFeatures("");
+    setDescription("");
+    setSessionDuration("");
+    setError(null);
+  };
+
+  const handleEditClick = (pkg: PackageItem) => {
+    setEditId(pkg.id);
+    setName(pkg.name);
+    setCategory(pkg.categoryId);
+    setPrice(pkg.price.toString());
+    setFeatures(pkg.features.join("\n"));
+    setDescription(pkg.description || "");
+    setSessionDuration(pkg.sessionDuration ? pkg.sessionDuration.toString() : "");
+    setError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -63,24 +93,52 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
       return;
     }
 
-    startTransition(async () => {
-      const response = await createPackageAction({
-        name,
-        categoryId: category,
-        price: priceNum,
-        features: featuresList,
-        description: description || undefined,
-      });
+    const sessionDurationNum = isTimeBased ? parseInt(sessionDuration) : null;
+    if (isTimeBased && (isNaN(sessionDurationNum!) || sessionDurationNum! <= 0)) {
+      setError("Durasi sesi wajib diisi dengan angka positif untuk kategori Multi-Sesi.");
+      return;
+    }
 
-      if (response.success && response.data) {
-        setPackages((prev) => [...prev, response.data as PackageItem]);
-        // Reset form
-        setName("");
-        setPrice("");
-        setFeatures("");
-        setDescription("");
+    startTransition(async () => {
+      if (editId) {
+        // Edit Mode
+        const response = await updatePackageAction(editId, {
+          name,
+          categoryId: category,
+          price: priceNum,
+          features: featuresList,
+          description: description || undefined,
+          sessionDuration: sessionDurationNum,
+        });
+
+        if (response.success && response.data) {
+          const updatedPkg = response.data as PackageItem;
+          setPackages((prev) =>
+            prev.map((item) => (item.id === editId ? updatedPkg : item))
+          );
+          toast.success("Paket berhasil diperbarui.");
+          resetForm();
+        } else {
+          setError(response.error || "Gagal memperbarui paket.");
+        }
       } else {
-        setError(response.error || "Gagal menambahkan paket.");
+        // Create Mode
+        const response = await createPackageAction({
+          name,
+          categoryId: category,
+          price: priceNum,
+          features: featuresList,
+          description: description || undefined,
+          sessionDuration: sessionDurationNum,
+        });
+
+        if (response.success && response.data) {
+          setPackages((prev) => [...prev, response.data as PackageItem]);
+          toast.success("Paket baru berhasil ditambahkan.");
+          resetForm();
+        } else {
+          setError(response.error || "Gagal menambahkan paket.");
+        }
       }
     });
   };
@@ -93,6 +151,7 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
       const response = await deletePackageAction(id);
       if (response.success) {
         setPackages((prev) => prev.filter((item) => item.id !== id));
+        toast.success("Paket berhasil dihapus.");
       } else {
         await alert(response.error || "Gagal menghapus paket.");
       }
@@ -125,9 +184,22 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* Form Column */}
-            <form onSubmit={handleAdd} className="lg:col-span-4 border border-border/40 bg-card p-6 space-y-5 rounded-none font-sans text-xs">
-              <h3 className="font-serif text-lg text-primary mb-4 font-semibold flex items-center gap-2 pb-3 border-b border-border/20">
-                <Plus className="w-4 h-4" /> Tambah Paket Baru
+            <form onSubmit={handleSubmit} className="lg:col-span-4 border border-border/40 bg-card p-6 space-y-5 rounded-none font-sans text-xs">
+              <h3 className="font-serif text-lg text-primary mb-4 font-semibold flex items-center justify-between pb-3 border-b border-border/20">
+                <span className="flex items-center gap-2">
+                  {editId ? <Settings className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                  {editId ? "Edit Paket" : "Tambah Paket Baru"}
+                </span>
+                {editId && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={resetForm}
+                    className="h-6 w-6 p-0 text-secondary hover:text-primary cursor-pointer animate-[fadeIn_0.2s_ease-out]"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
               </h3>
 
               {error && (
@@ -181,6 +253,25 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
 
 
 
+              {/* Session Duration (conditionally rendered for TIME_BASED categories) */}
+              {isTimeBased && (
+                <div className="space-y-1.5 animate-[fadeIn_0.2s_ease-out]">
+                  <label className="uppercase tracking-wider text-secondary font-bold block">Durasi Sesi (Menit)</label>
+                  <input
+                    type="number"
+                    placeholder="contoh: 60, 90, 120"
+                    value={sessionDuration}
+                    onChange={(e) => setSessionDuration(e.target.value)}
+                    className="w-full px-3 py-2 bg-transparent border border-border/40 focus:border-primary focus:outline-none rounded-none text-primary"
+                    required={isTimeBased}
+                    min="1"
+                  />
+                  <p className="text-[10px] text-secondary/60">
+                    Durasi dalam menit. Digunakan untuk menghitung tabrakan jadwal booking.
+                  </p>
+                </div>
+              )}
+
               {/* Description */}
               <div className="space-y-1.5">
                 <label className="uppercase tracking-wider text-secondary font-bold block">Deskripsi Singkat</label>
@@ -206,13 +297,25 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
                 />
               </div>
 
-              <Button
-                type="submit"
-                disabled={isPending}
-                className="w-full uppercase tracking-widest py-5 rounded-none font-bold text-white cursor-pointer"
-              >
-                {isPending ? "Menyimpan..." : "Tambah Paket"}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className="flex-1 uppercase tracking-widest py-5 rounded-none font-bold text-white cursor-pointer"
+                >
+                  {isPending ? "Menyimpan..." : editId ? "Simpan" : "Tambah Paket"}
+                </Button>
+                {editId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={resetForm}
+                    className="uppercase tracking-widest py-5 px-4 rounded-none font-bold cursor-pointer"
+                  >
+                    Batal
+                  </Button>
+                )}
+              </div>
             </form>
 
             {/* List Column */}
@@ -233,6 +336,11 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
                           <span className="font-sans text-[8px] uppercase tracking-widest text-primary border border-primary px-2 py-0.5 font-bold">
                             {pkg.category?.label || "Kategori"}
                           </span>
+                          {pkg.sessionDuration && (
+                            <span className="font-sans text-[8px] uppercase tracking-widest text-blue-800 bg-blue-100 dark:text-blue-300 dark:bg-blue-950/40 px-2 py-0.5 font-bold">
+                              {pkg.sessionDuration} Menit
+                            </span>
+                          )}
                         </div>
                         
                         <h4 className="font-serif text-lg font-semibold text-primary mb-2">{pkg.name}</h4>
@@ -257,13 +365,23 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
                         </ul>
                       </div>
 
-                      <div className="pt-4 border-t border-border/20 mt-6 flex justify-end">
+                      <div className="pt-4 border-t border-border/20 mt-6 flex justify-end gap-1">
+                        <Button
+                          onClick={() => handleEditClick(pkg)}
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-primary hover:bg-muted cursor-pointer"
+                          title="Edit Paket"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
                         <Button
                           onClick={() => handleDelete(pkg.id)}
                           disabled={isPending}
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-red-700 hover:bg-red-50 hover:text-red-800 cursor-pointer"
+                          title="Hapus Paket"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

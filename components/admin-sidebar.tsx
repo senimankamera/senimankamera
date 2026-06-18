@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Image as ImageIcon, 
-  Calendar, 
-  Users, 
-  Upload, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Image as ImageIcon,
+  Calendar,
+  Users,
+  Upload,
+  Settings,
   LogOut,
   ClipboardList,
   Tag,
@@ -48,13 +48,11 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SessionTimeout />
-      
+
       {/* Brand Header */}
       <SidebarHeader className="border-b border-border/40 py-6 px-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 overflow-hidden rounded-full border border-border bg-neutral-100 flex items-center justify-center">
-            <img src="/logo.jpg" alt="SENIMAN_KAMERA" className="w-full h-full object-cover" />
-          </div>
+          <img src="/logo.png" alt="SENIMAN_KAMERA" className="h-8 w-auto object-contain" />
           <div>
             <h1 className="font-serif text-base font-semibold leading-tight text-primary">Admin Studio</h1>
             <p className="font-sans text-[9px] uppercase tracking-widest text-secondary font-bold">Kelola Portofolio</p>
@@ -73,11 +71,10 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                 <SidebarMenuButton
                   render={<Link href={item.href} />}
                   isActive={active}
-                  className={`py-6 px-3 flex items-center gap-3 font-sans text-xs uppercase tracking-widest font-bold w-full ${
-                    active
+                  className={`py-6 px-3 flex items-center gap-3 font-sans text-xs uppercase tracking-widest font-bold w-full ${active
                       ? "text-primary-foreground bg-primary hover:bg-primary/90"
                       : "text-secondary hover:text-primary transition-colors"
-                  }`}
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   <span>{item.name}</span>

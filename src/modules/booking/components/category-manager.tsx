@@ -15,6 +15,7 @@ interface CategoryItem {
   label: string;
   description: string | null;
   order: number;
+  bookingType: string;
   _count?: {
     packages: number;
   };
@@ -35,6 +36,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
   const [order, setOrder] = useState("0");
+  const [bookingType, setBookingType] = useState("DATE_ONLY");
   const [error, setError] = useState<string | null>(null);
 
   const resetForm = () => {
@@ -43,6 +45,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
     setLabel("");
     setDescription("");
     setOrder("0");
+    setBookingType("DATE_ONLY");
     setError(null);
   };
 
@@ -52,6 +55,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
     setLabel(cat.label);
     setDescription(cat.description || "");
     setOrder(cat.order.toString());
+    setBookingType(cat.bookingType || "DATE_ONLY");
     setError(null);
   };
 
@@ -77,8 +81,9 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
         const response = await updateCategoryAction(editId, {
           name,
           label,
-          description: description || undefined,
+          description: description || null,
           order: orderNum,
+          bookingType,
         });
 
         if (response.success && response.data) {
@@ -104,6 +109,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
           label,
           description: description || undefined,
           order: orderNum,
+          bookingType,
         });
 
         if (response.success && response.data) {
@@ -227,6 +233,24 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
                 </p>
               </div>
 
+              {/* Booking Type */}
+              <div className="space-y-1.5">
+                <label className="uppercase tracking-wider text-secondary font-bold block">
+                  Tipe Booking
+                </label>
+                <select
+                  value={bookingType}
+                  onChange={(e) => setBookingType(e.target.value)}
+                  className="w-full px-3 py-2 bg-transparent border border-border/40 focus:border-primary focus:outline-none rounded-none text-primary"
+                >
+                  <option value="DATE_ONLY" className="bg-card text-primary">Satu Booking per Tanggal (DATE_ONLY)</option>
+                  <option value="TIME_BASED" className="bg-card text-primary">Banyak Booking per Tanggal / Multi-Sesi (TIME_BASED)</option>
+                </select>
+                <p className="text-[10px] text-secondary/60">
+                  DATE_ONLY untuk kategori seperti Wedding. TIME_BASED untuk Graduasi/Studio.
+                </p>
+              </div>
+
               {/* Order */}
               <div className="space-y-1.5">
                 <label className="uppercase tracking-wider text-secondary font-bold block">
@@ -294,6 +318,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
                       <th className="pb-3 pr-4 font-bold text-[10px] w-[80px]">Urutan</th>
                       <th className="pb-3 pr-4 font-bold text-[10px]">Nama Internal</th>
                       <th className="pb-3 pr-4 font-bold text-[10px]">Label Publik</th>
+                      <th className="pb-3 pr-4 font-bold text-[10px] w-[110px]">Tipe Booking</th>
                       <th className="pb-3 pr-4 font-bold text-[10px] hidden md:table-cell">Deskripsi</th>
                       <th className="pb-3 pr-4 font-bold text-[10px] text-center w-[80px]">Paket</th>
                       <th className="pb-3 text-right w-[100px]">Aksi</th>
@@ -315,6 +340,15 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
                           </span>
                         </td>
                         <td className="py-4 pr-4 text-primary font-semibold">{cat.label}</td>
+                        <td className="py-4 pr-4">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-none text-[9px] font-bold uppercase tracking-wider ${
+                            cat.bookingType === "TIME_BASED" 
+                              ? "bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300"
+                              : "bg-neutral-100 dark:bg-neutral-800/40 text-secondary"
+                          }`}>
+                            {cat.bookingType === "TIME_BASED" ? "Multi-Sesi" : "Harian"}
+                          </span>
+                        </td>
                         <td className="py-4 pr-4 text-secondary hidden md:table-cell max-w-[250px] truncate">
                           {cat.description || <span className="italic text-secondary/40">Tanpa deskripsi</span>}
                         </td>

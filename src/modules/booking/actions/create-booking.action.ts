@@ -12,23 +12,6 @@ export async function createBookingAction(input: CreateBookingInputType) {
     const useCase = new CreateBookingUseCase(repository);
     const booking = await useCase.execute(input);
 
-    // Send Telegram Notification
-    try {
-      const telegramService = new TelegramService();
-      await telegramService.sendBookingNotification({
-        fullName: input.fullName,
-        email: input.email,
-        phoneNumber: input.phoneNumber || undefined,
-        packageType: input.packageType,
-        bookingDate: new Date(input.bookingDate),
-        eventTime: input.eventTime,
-        eventName: input.eventName,
-        eventLocation: input.eventLocation,
-        notes: input.notes || undefined,
-      });
-    } catch (telegramError) {
-      console.error("Failed to send booking telegram notification:", telegramError);
-    }
 
     // Revalidate the admin dashboard to reflect new entries immediately
     revalidatePath("/admin");

@@ -53,6 +53,7 @@ export class PackageRepository {
     price: number;
     features: string[];
     description?: string;
+    sessionDuration?: number | null;
   }) {
     return prisma.package.create({
       data,
@@ -70,6 +71,7 @@ export class PackageRepository {
       price?: number;
       features?: string[];
       description?: string;
+      sessionDuration?: number | null;
     }
   ) {
     return prisma.package.update({

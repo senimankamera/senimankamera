@@ -46,7 +46,20 @@ interface Booking {
   notes: string | null;
   status: string;
   source: string;
+  sessionStartTime: string | null;
+  sessionEndTime: string | null;
   createdAt: string; // ISO
+  dpAmount: number | null;
+  totalAmount: number | null;
+}
+
+function formatRupiah(amount: number): string {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
 
 interface BookingsClientProps {
@@ -65,6 +78,7 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [newDate, setNewDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
   const [isPending, startTransition] = useTransition();
 
   // Extract unique years from booking dates
@@ -135,20 +149,38 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
     if (!selectedBooking || !newDate) return;
 
     startTransition(async () => {
-      const res = await rescheduleBookingAction(selectedBooking.id, newDate);
+      const isTimeBased = selectedBooking.sessionStartTime !== null;
+      const res = await rescheduleBookingAction(
+        selectedBooking.id, 
+        newDate, 
+        isTimeBased ? rescheduleTime : undefined
+      );
       if (res.success && res.data) {
         setBookings((prev) =>
           prev.map((b) =>
             b.id === selectedBooking.id
-              ? { ...b, bookingDate: res.data.bookingDate }
+              ? { 
+                  ...b, 
+                  bookingDate: res.data.bookingDate,
+                  sessionStartTime: res.data.sessionStartTime,
+                  sessionEndTime: res.data.sessionEndTime,
+                  eventTime: res.data.eventTime
+                }
               : b
           )
         );
         setIsRescheduleOpen(false);
         setNewDate("");
+        setRescheduleTime("");
         toast.success("Reschedule berhasil!");
         if (selectedBooking) {
-          setSelectedBooking({ ...selectedBooking, bookingDate: res.data.bookingDate });
+          setSelectedBooking({ 
+            ...selectedBooking, 
+            bookingDate: res.data.bookingDate,
+            sessionStartTime: res.data.sessionStartTime,
+            sessionEndTime: res.data.sessionEndTime,
+            eventTime: res.data.eventTime
+          });
         }
       } else {
         toast.error(res.error || "Gagal menjadwal ulang");
@@ -273,6 +305,7 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
                 <th className="py-4 px-6">Pemesan</th>
                 <th className="py-4 px-6">Detail Acara</th>
                 <th className="py-4 px-6">Jadwal</th>
+                <th className="py-4 px-6">Pembayaran</th>
                 <th className="py-4 px-6">Status</th>
                 <th className="py-4 px-6 text-right">Aksi</th>
               </tr>
@@ -280,7 +313,7 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
             <tbody className="divide-y divide-border/20 font-sans text-xs">
               {filteredBookings.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-secondary/60 italic">
+                  <td colSpan={7} className="py-12 text-center text-secondary/60 italic">
                     Tidak ada data booking yang sesuai dengan kriteria filter.
                   </td>
                 </tr>
@@ -303,11 +336,30 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
                     </td>
                     <td className="py-5 px-6">
                       <div className="font-semibold text-primary">{formatDate(booking.bookingDate)}</div>
-                      {booking.eventTime && (
+                      {booking.sessionStartTime ? (
                         <div className="text-[10px] text-secondary flex items-center gap-1 mt-0.5">
-                          <Clock className="w-3 h-3 text-secondary/60" /> {booking.eventTime}
+                          <Clock className="w-3 h-3 text-secondary/60" /> {booking.sessionStartTime} – {booking.sessionEndTime} WIB
                         </div>
-                      )}
+                      ) : booking.eventTime ? (
+                        <div className="text-[10px] text-secondary flex items-center gap-1 mt-0.5">
+                          <Clock className="w-3 h-3 text-secondary/60" /> {booking.eventTime} WIB
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="py-5 px-6">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-500">
+                            DP: {formatRupiah(booking.dpAmount ?? 0)}
+                          </span>
+                          <span className={`text-[9px] uppercase px-1.5 py-0.5 font-semibold font-mono tracking-wider border rounded-none scale-95 origin-left ${booking.sessionStartTime ? 'border-amber-200 text-amber-700 bg-amber-50 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30' : 'border-blue-200 text-blue-700 bg-blue-50 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30'}`}>
+                            {booking.sessionStartTime ? "Time" : "Date"}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-secondary font-medium">
+                          Sisa: {formatRupiah((booking.totalAmount ?? 0) - (booking.dpAmount ?? 0))}
+                        </div>
+                      </div>
                     </td>
                     <td className="py-5 px-6">
                       {getStatusBadge(booking.status)}
@@ -379,6 +431,7 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
                           setSelectedBooking(booking);
                           setIsRescheduleOpen(true);
                           setNewDate(new Date(booking.bookingDate).toISOString().split("T")[0]);
+                          setRescheduleTime(booking.sessionStartTime || "");
                         }}
                         className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-100"
                         title="Reschedule"
@@ -487,11 +540,44 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
                     <div className="text-primary font-medium flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-secondary/60" /> {formatDate(selectedBooking.bookingDate)}
                     </div>
-                    {selectedBooking.eventTime && (
+                    {selectedBooking.sessionStartTime ? (
+                      <div className="text-primary font-medium flex items-center gap-1.5 mt-1">
+                        <Clock className="w-3.5 h-3.5 text-secondary/60" /> Sesi: {selectedBooking.sessionStartTime} – {selectedBooking.sessionEndTime} WIB
+                      </div>
+                    ) : selectedBooking.eventTime ? (
                       <div className="text-primary font-medium flex items-center gap-1.5 mt-1">
                         <Clock className="w-3.5 h-3.5 text-secondary/60" /> Jam {selectedBooking.eventTime} WIB
                       </div>
-                    )}
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              {/* Informasi Pembayaran */}
+              <div className="space-y-3">
+                <h4 className="font-serif text-xs uppercase tracking-widest text-primary font-semibold border-b border-border/10 pb-1.5">
+                  Informasi Pembayaran
+                </h4>
+                <div className="grid grid-cols-2 gap-4 font-sans text-xs">
+                  <div>
+                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Tipe Booking</span>
+                    <div>
+                      <Badge variant="outline" className={`text-[9px] uppercase px-1.5 py-0.5 font-semibold font-mono tracking-wider rounded-none ${selectedBooking.sessionStartTime ? 'border-amber-200 text-amber-700 bg-amber-50 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30' : 'border-blue-200 text-blue-700 bg-blue-50 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30'}`}>
+                        {selectedBooking.sessionStartTime ? "TIME_BASED" : "DATE_ONLY"}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Harga Paket</span>
+                    <span className="text-primary font-bold">{formatRupiah(selectedBooking.totalAmount ?? 0)}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Down Payment (DP)</span>
+                    <span className="text-emerald-600 dark:text-emerald-500 font-bold">{formatRupiah(selectedBooking.dpAmount ?? 0)}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Sisa Pelunasan</span>
+                    <span className="text-blue-600 dark:text-blue-500 font-bold">{formatRupiah((selectedBooking.totalAmount ?? 0) - (selectedBooking.dpAmount ?? 0))}</span>
                   </div>
                 </div>
               </div>
@@ -544,6 +630,7 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
                   setIsDetailOpen(false);
                   setIsRescheduleOpen(true);
                   setNewDate(new Date(selectedBooking.bookingDate).toISOString().split("T")[0]);
+                  setRescheduleTime(selectedBooking.sessionStartTime || "");
                 }}
                 variant="outline"
                 className="rounded-none border-border font-sans text-xs uppercase tracking-wider py-5"
@@ -580,6 +667,19 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
                     required
                     className="rounded-none border-border/40 text-xs py-5"
                   />
+                  {selectedBooking.sessionStartTime !== null && (
+                    <div className="space-y-1.5 mt-4">
+                      <label htmlFor="rescheduleTime" className="text-[10px] uppercase font-bold text-secondary tracking-wider block">Jam Sesi Baru</label>
+                      <Input
+                        type="time"
+                        id="rescheduleTime"
+                        value={rescheduleTime}
+                        onChange={(e) => setRescheduleTime(e.target.value)}
+                        required
+                        className="rounded-none border-border/40 text-xs py-5"
+                      />
+                    </div>
+                  )}
                   <p className="text-[10px] text-secondary/70 italic flex items-center gap-1 mt-1">
                     <Info className="w-3.5 h-3.5" /> Tanggal baru akan dikunci dan tanggal lama akan dibebaskan kembali.
                   </p>

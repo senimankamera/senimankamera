@@ -78,47 +78,47 @@ export function RecapClient({ bookings }: RecapClientProps) {
   };
 
   // Filter Logic
-  const isDateInRange = (bookingDateStr: string) => {
-    const bookingDate = new Date(bookingDateStr);
+  const isDateInRange = (dateStr: string) => {
+    const targetDate = new Date(dateStr);
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
     if (dateRange === "today") {
-      return bookingDate >= startOfToday && bookingDate <= endOfToday;
+      return targetDate >= startOfToday && targetDate <= endOfToday;
     }
     if (dateRange === "yesterday") {
       const startOfYesterday = new Date(startOfToday);
       startOfYesterday.setDate(startOfYesterday.getDate() - 1);
       const endOfYesterday = new Date(endOfToday);
       endOfYesterday.setDate(endOfYesterday.getDate() - 1);
-      return bookingDate >= startOfYesterday && bookingDate <= endOfYesterday;
+      return targetDate >= startOfYesterday && targetDate <= endOfYesterday;
     }
     if (dateRange === "7-days") {
       const sevenDaysAgo = new Date(startOfToday);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      return bookingDate >= sevenDaysAgo && bookingDate <= endOfToday;
+      return targetDate >= sevenDaysAgo && targetDate <= endOfToday;
     }
     if (dateRange === "30-days") {
       const thirtyDaysAgo = new Date(startOfToday);
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      return bookingDate >= thirtyDaysAgo && bookingDate <= endOfToday;
+      return targetDate >= thirtyDaysAgo && targetDate <= endOfToday;
     }
     if (dateRange === "this-month") {
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-      return bookingDate >= startOfMonth && bookingDate <= endOfMonth;
+      return targetDate >= startOfMonth && targetDate <= endOfMonth;
     }
     if (dateRange === "this-year") {
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
-      return bookingDate >= startOfYear && bookingDate <= endOfYear;
+      return targetDate >= startOfYear && targetDate <= endOfYear;
     }
     if (dateRange === "custom") {
       if (!customStart && !customEnd) return true;
       const start = customStart ? new Date(customStart) : new Date(0);
       const end = customEnd ? new Date(new Date(customEnd).setHours(23, 59, 59, 999)) : new Date(8640000000000000);
-      return bookingDate >= start && bookingDate <= end;
+      return targetDate >= start && targetDate <= end;
     }
     return true; // all
   };
@@ -129,7 +129,7 @@ export function RecapClient({ bookings }: RecapClientProps) {
       (booking.eventName && booking.eventName.toLowerCase().includes(search.toLowerCase())) ||
       booking.packageType.toLowerCase().includes(search.toLowerCase());
 
-    return matchesSearch && isDateInRange(booking.bookingDate);
+    return matchesSearch && isDateInRange(booking.createdAt);
   });
 
   // Calculate Metrics from Filtered Bookings
@@ -193,8 +193,8 @@ export function RecapClient({ bookings }: RecapClientProps) {
         "Nama Event": b.eventName || "-",
         "Tanggal Booking": formatDate(b.bookingDate),
         "Status": b.status,
-        "Pembayaran DP (20%)": dpAmount,
-        "Pelunasan FULL (80%)": fullAmount,
+        "Pembayaran DP": dpAmount,
+        "Pelunasan": fullAmount,
         "Total Pendapatan": dpAmount + fullAmount,
       };
     });
@@ -215,8 +215,8 @@ export function RecapClient({ bookings }: RecapClientProps) {
       "Nama Event", 
       "Tanggal Booking", 
       "Status", 
-      "Pembayaran DP (20%)", 
-      "Pelunasan FULL (80%)", 
+      "Pembayaran DP", 
+      "Pelunasan", 
       "Total Pendapatan"
     ];
     const rows = filteredBookings.map((b) => {
@@ -404,8 +404,8 @@ export function RecapClient({ bookings }: RecapClientProps) {
                 <th className="py-4 px-6">Klien</th>
                 <th className="py-4 px-6">Paket / Event</th>
                 <th className="py-4 px-6">Status</th>
-                <th className="py-4 px-6">DP (20%)</th>
-                <th className="py-4 px-6">Pelunasan (80%)</th>
+                <th className="py-4 px-6">DP</th>
+                <th className="py-4 px-6">Pelunasan</th>
                 <th className="py-4 px-6 text-right">Total</th>
               </tr>
             </thead>
@@ -464,11 +464,11 @@ export function RecapClient({ bookings }: RecapClientProps) {
         </CardHeader>
         <CardContent className="p-4 space-y-3 font-sans text-xs">
           <div className="flex justify-between items-center text-secondary">
-            <span>Total DP (20%) Masuk</span>
+            <span>Total DP Masuk</span>
             <span className="font-mono font-medium">{formatRupiah(totalDP)}</span>
           </div>
           <div className="flex justify-between items-center text-secondary">
-            <span>Total Pelunasan (80%) Masuk</span>
+            <span>Total Pelunasan Masuk</span>
             <span className="font-mono font-medium">{formatRupiah(totalFull)}</span>
           </div>
           <div className="border-t border-border/30 pt-3 flex justify-between items-center text-primary font-bold text-sm">

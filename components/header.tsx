@@ -36,11 +36,10 @@ export function Header() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 backdrop-blur-md ${
-          isScrolled
-            ? "bg-background/95 border-border py-4 shadow-sm"
-            : "bg-background/70 border-transparent py-6"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 backdrop-blur-md ${isScrolled
+          ? "bg-background/95 border-border py-4 shadow-sm"
+          : "bg-background/70 border-transparent py-6"
+          }`}
       >
         <div className="flex justify-between items-center px-6 md:px-20 w-full max-w-[1440px] mx-auto">
           {/* Mobile Menu Toggle */}
@@ -57,10 +56,11 @@ export function Header() {
             href="/"
             className="font-serif text-2xl md:text-3xl tracking-tighter text-primary flex items-center gap-3"
           >
-            <div className="w-10 h-10 overflow-hidden rounded-full border border-border bg-neutral-100 flex items-center justify-center">
-              <img src="/logo.jpg" alt="SENIMAN_KAMERA" className="w-full h-full object-cover" />
-            </div>
-            <span className="hidden sm:inline font-semibold">SENIMAN_KAMERA</span>
+            <img
+              src="/logo.png"
+              alt="SENIMAN_KAMERA"
+              className="h-8 w-auto object-contain"
+            />
           </Link>
 
           {/* Navigation Links (Desktop) */}
@@ -71,11 +71,10 @@ export function Header() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`py-1 transition-all duration-300 hover:text-foreground ${
-                    active
-                      ? "text-foreground border-b border-foreground"
-                      : "text-foreground/70"
-                  }`}
+                  className={`py-1 transition-all duration-300 hover:text-foreground ${active
+                    ? "text-foreground border-b border-foreground"
+                    : "text-foreground/70"
+                    }`}
                 >
                   {link.name}
                 </Link>
@@ -105,7 +104,13 @@ export function Header() {
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[100] bg-background flex flex-col p-6 animate-in fade-in slide-in-from-top duration-300">
           <div className="flex justify-between items-center mb-12">
-            <span className="font-serif text-xl font-bold tracking-tighter">SENIMAN_KAMERA</span>
+            <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
+              <img
+                src="/logo.png"
+                alt="SENIMAN_KAMERA"
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
               className="text-foreground hover:opacity-80 transition-all"
@@ -119,9 +124,8 @@ export function Header() {
                 key={link.name}
                 href={link.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`py-2 border-b border-border/40 ${
-                  isActive(link.href) ? "text-foreground border-l-2 border-foreground pl-2" : "text-foreground/70"
-                }`}
+                className={`py-2 border-b border-border/40 ${isActive(link.href) ? "text-foreground border-l-2 border-foreground pl-2" : "text-foreground/70"
+                  }`}
               >
                 {link.name}
               </Link>

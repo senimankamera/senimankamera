@@ -5,14 +5,14 @@ import { CalendarRepository } from "@/src/modules/calendar/repositories/calendar
 import { RescheduleBookingUseCase } from "../use-cases/reschedule-booking.use-case";
 import { revalidatePath } from "next/cache";
 
-export async function rescheduleBookingAction(id: string, newDateStr: string) {
+export async function rescheduleBookingAction(id: string, newDateStr: string, sessionStartTime?: string) {
   try {
     const bookingRepository = new BookingRepository();
     const calendarRepository = new CalendarRepository();
     const useCase = new RescheduleBookingUseCase(bookingRepository, calendarRepository);
 
     const newDate = new Date(newDateStr);
-    const result = await useCase.execute(id, newDate);
+    const result = await useCase.execute(id, newDate, sessionStartTime);
 
     revalidatePath("/admin");
     revalidatePath("/admin/bookings");

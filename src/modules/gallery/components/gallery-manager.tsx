@@ -4,8 +4,8 @@ import { useState, useTransition } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { uploadMediaAction } from "../actions/upload-media.action";
-import { deleteGalleryAction } from "../actions/gallery-admin.action";
-import { Trash2, Plus, Image as ImageIcon, AlertCircle, FileVideo, UploadCloud } from "lucide-react";
+import { deleteGalleryAction, updateGalleryAction } from "../actions/gallery-admin.action";
+import { Trash2, Plus, Image as ImageIcon, AlertCircle, FileVideo, UploadCloud, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/components/modal-provider";
 import { toast } from "sonner";
@@ -39,6 +39,7 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
   const { alert, confirm } = useModal();
 
   // Form States
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(initialCategories[0]?.name || "Wedding");
   const [subCategory, setSubCategory] = useState("");
@@ -53,7 +54,7 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) {
       setFile(null);
-      setPreviewUrl(null);
+      setPreviewUrl(editingId !== null ? galleries.find(item => item.id === editingId)?.imageUrl || null : null);
       return;
     }
 
@@ -63,7 +64,7 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
     if (!isImg && !isVid) {
       setError("Tipe file tidak didukung. Harap pilih gambar atau video.");
       setFile(null);
-      setPreviewUrl(null);
+      setPreviewUrl(editingId !== null ? galleries.find(item => item.id === editingId)?.imageUrl || null : null);
       return;
     }
 
@@ -71,7 +72,7 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
     if (selectedFile.size > maxSize) {
       setError(`Ukuran file terlalu besar. Maksimal untuk ${isImg ? "gambar adalah 20 MB" : "video adalah 100 MB"}.`);
       setFile(null);
-      setPreviewUrl(null);
+      setPreviewUrl(editingId !== null ? galleries.find(item => item.id === editingId)?.imageUrl || null : null);
       return;
     }
 
@@ -80,17 +81,51 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
     setPreviewUrl(url);
   };
 
+  const handleCancel = () => {
+    setEditingId(null);
+    setTitle("");
+    setCategory(initialCategories[0]?.name || "Wedding");
+    setSubCategory("");
+    setFile(null);
+    setPreviewUrl(null);
+    setDescription("");
+    setError(null);
+
+    // Reset file input element
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) fileInput.value = "";
+  };
+
+  const handleStartEdit = (item: GalleryItem) => {
+    setEditingId(item.id);
+    setTitle(item.title);
+    setCategory(item.category);
+    setSubCategory(item.subCategory);
+    setAspect(item.aspect);
+    setDescription(item.description || "");
+    setFile(null);
+    setPreviewUrl(item.imageUrl);
+    setError(null);
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!title || !category || !subCategory || !file || !aspect) {
-      setError("Semua field wajib diisi termasuk media portofolio.");
+    if (!title || !category || !subCategory || !aspect) {
+      setError("Semua field teks wajib diisi.");
+      return;
+    }
+
+    if (editingId === null && !file) {
+      setError("Media portofolio wajib diunggah untuk portofolio baru.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("file", file);
+    if (file) {
+      formData.append("file", file);
+    }
     formData.append("title", title);
     formData.append("category", category);
     formData.append("subCategory", subCategory);
@@ -98,26 +133,31 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
     if (description) {
       formData.append("description", description);
     }
+    if (editingId !== null) {
+      formData.append("id", editingId.toString());
+    }
 
     startTransition(async () => {
-      const response = await uploadMediaAction(formData);
+      let response;
+      if (editingId !== null) {
+        response = await updateGalleryAction(formData);
+      } else {
+        response = await uploadMediaAction(formData);
+      }
 
       if (response.success && response.data) {
-        setGalleries((prev) => [...prev, response.data as GalleryItem]);
-        // Reset form
-        setTitle("");
-        setSubCategory("");
-        setFile(null);
-        setPreviewUrl(null);
-        setDescription("");
-
-        // Reset file input element
-        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-        if (fileInput) fileInput.value = "";
-
-        toast.success("Portofolio baru berhasil diunggah!");
+        if (editingId !== null) {
+          setGalleries((prev) =>
+            prev.map((item) => (item.id === editingId ? (response.data as GalleryItem) : item))
+          );
+          toast.success("Portofolio berhasil diperbarui!");
+        } else {
+          setGalleries((prev) => [...prev, response.data as GalleryItem]);
+          toast.success("Portofolio baru berhasil diunggah!");
+        }
+        handleCancel();
       } else {
-        setError(response.error || "Gagal mengunggah media.");
+        setError(response.error || "Gagal menyimpan portofolio.");
       }
     });
   };
@@ -130,6 +170,9 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
       const response = await deleteGalleryAction(id);
       if (response.success) {
         setGalleries((prev) => prev.filter((item) => item.id !== id));
+        if (editingId === id) {
+          handleCancel();
+        }
         toast.success("Portofolio berhasil dihapus.");
       } else {
         await alert(response.error || "Gagal menghapus item.");
@@ -165,7 +208,8 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
             {/* Form Column (Left 4 cols) */}
             <form onSubmit={handleAdd} className="lg:col-span-4 border border-border/40 bg-card p-6 space-y-5 rounded-none font-sans text-xs">
               <h3 className="font-serif text-lg text-primary mb-4 font-semibold flex items-center gap-2 pb-3 border-b border-border/20">
-                <Plus className="w-4 h-4" /> Unggah Portofolio
+                {editingId !== null ? <Edit3 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                {editingId !== null ? "Edit Portofolio" : "Unggah Portofolio"}
               </h3>
 
               {error && (
@@ -233,7 +277,9 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
 
               {/* Upload Media File */}
               <div className="space-y-1.5">
-                <label className="uppercase tracking-wider text-secondary font-bold block">Unggah Media File *</label>
+                <label className="uppercase tracking-wider text-secondary font-bold block">
+                  {editingId !== null ? "Ganti Media File (Opsional)" : "Unggah Media File *"}
+                </label>
                 <div className="relative border border-dashed border-border/60 p-4 hover:border-primary/50 transition-colors flex flex-col items-center justify-center text-center bg-muted/10 cursor-pointer">
                   <UploadCloud className="w-8 h-8 text-secondary/60 mb-2" />
                   <input
@@ -241,7 +287,7 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
                     accept="image/*,video/*"
                     onChange={handleFileChange}
                     className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                    required
+                    required={editingId === null}
                   />
                   <span className="text-[10px] text-primary font-semibold">Klik / seret file untuk memilih</span>
                   <span className="text-[9px] text-secondary mt-1">Image (max 20MB) / Video (max 100MB)</span>
@@ -256,7 +302,7 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
 
                 {previewUrl && (
                   <div className="mt-3 border border-border/20 aspect-[4/3] relative overflow-hidden bg-neutral-50 flex items-center justify-center">
-                    {file?.type.startsWith("video/") ? (
+                    {(file ? file.type.startsWith("video/") : (editingId !== null && (galleries.find(item => item.id === editingId)?.mediaType === "video" || galleries.find(item => item.id === editingId)?.imageUrl.endsWith(".mp4")))) ? (
                       <video src={previewUrl} className="w-full h-full object-cover" muted controls />
                     ) : (
                       <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
@@ -277,13 +323,26 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
                 />
               </div>
 
-              <Button
-                type="submit"
-                disabled={isPending}
-                className="w-full uppercase tracking-widest py-5 rounded-none font-bold text-white cursor-pointer"
-              >
-                {isPending ? "Mengunggah & Memproses..." : "Unggah & Simpan"}
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-full uppercase tracking-widest py-5 rounded-none font-bold text-white cursor-pointer"
+                >
+                  {isPending ? "Memproses..." : (editingId !== null ? "Perbarui & Simpan" : "Unggah & Simpan")}
+                </Button>
+                {editingId !== null && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                    disabled={isPending}
+                    className="w-full uppercase tracking-widest py-4 rounded-none font-bold cursor-pointer text-secondary"
+                  >
+                    Batal Edit
+                  </Button>
+                )}
+              </div>
             </form>
 
             {/* List Column (Right 8 cols) */}
@@ -341,13 +400,24 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
                         </div>
                       </div>
 
-                      <div className="pt-3 border-t border-border/20 mt-3 flex justify-end">
+                      <div className="pt-3 border-t border-border/20 mt-3 flex justify-end gap-2">
+                        <Button
+                          onClick={() => handleStartEdit(item)}
+                          disabled={isPending}
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700 cursor-pointer"
+                          title="Edit Portofolio"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </Button>
                         <Button
                           onClick={() => handleDelete(item.id)}
                           disabled={isPending}
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-red-700 hover:bg-red-50 hover:text-red-800 cursor-pointer"
+                          title="Hapus Portofolio"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

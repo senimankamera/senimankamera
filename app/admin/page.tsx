@@ -1,6 +1,6 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { createClient } from "@/src/infrastructure/supabase/server";
 import {
   DollarSign,
   CalendarCheck,
@@ -68,11 +68,11 @@ function getStatusLabel(status: string) {
 }
 
 export default async function AdminPage() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("auth_session");
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   // Server-side auth check
-  if (!session || session.value !== "true") {
+  if (!user) {
     redirect("/login");
   }
 
@@ -145,9 +145,7 @@ export default async function AdminPage() {
         <header className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-border/40 bg-background sticky top-0 z-40">
           <div className="flex items-center gap-3">
             <SidebarTrigger className="text-secondary hover:text-primary transition-colors" />
-            <div className="w-8 h-8 overflow-hidden rounded-full border border-border bg-neutral-100 flex items-center justify-center md:hidden">
-              <img src="/logo.jpg" alt="SENIMAN_KAMERA" className="w-full h-full object-cover" />
-            </div>
+            <img src="/logo.png" alt="SENIMAN_KAMERA" className="h-6 w-auto object-contain md:hidden" />
             <span className="font-serif tracking-tighter font-semibold md:hidden">Admin</span>
             <div className="hidden md:block">
               <span className="font-sans text-[10px] uppercase tracking-widest text-secondary font-bold">

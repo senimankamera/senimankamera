@@ -17,6 +17,8 @@ export interface CreateBookingInput {
   dpAmount?: number;
   totalAmount?: number;
   source?: string;
+  sessionStartTime?: string;
+  sessionEndTime?: string;
 }
 
 export class BookingRepository {
@@ -56,21 +58,58 @@ export class BookingRepository {
           dpAmount: data.dpAmount,
           totalAmount: data.totalAmount,
           source: source,
+          sessionStartTime: data.sessionStartTime,
+          sessionEndTime: data.sessionEndTime,
         },
       });
+
+      // Find package to check booking type
+      const pkg = await tx.package.findFirst({
+        where: {
+          OR: [
+            { name: { equals: data.packageType, mode: "insensitive" } },
+            { id: data.packageType }
+          ]
+        },
+        include: {
+          category: true
+        }
+      });
+      const isTimeBased = pkg?.category?.bookingType === "TIME_BASED";
 
       // Normalize date to noon to avoid timezone shift day changes
       const normalizedDate = new Date(data.bookingDate);
       normalizedDate.setHours(12, 0, 0, 0);
 
-      // Create CalendarSlot
-      await tx.calendarSlot.create({
-        data: {
-          date: normalizedDate,
-          status: status,
-          bookingId: booking.id,
-        },
-      });
+      if (isTimeBased) {
+        // For TIME_BASED, check if CalendarSlot already exists
+        const existingSlot = await tx.calendarSlot.findFirst({
+          where: {
+            date: {
+              gte: new Date(new Date(data.bookingDate).setHours(0, 0, 0, 0)),
+              lte: new Date(new Date(data.bookingDate).setHours(23, 59, 59, 999)),
+            },
+          },
+        });
+        if (!existingSlot) {
+          await tx.calendarSlot.create({
+            data: {
+              date: normalizedDate,
+              status: "TIME_BASED_ACTIVE",
+              bookingId: null,
+            },
+          });
+        }
+      } else {
+        // Create CalendarSlot
+        await tx.calendarSlot.create({
+          data: {
+            date: normalizedDate,
+            status: status,
+            bookingId: booking.id,
+          },
+        });
+      }
 
       return booking;
     });
@@ -126,27 +165,49 @@ export class BookingRepository {
   }
 
   async getBookingsCalendarInfo() {
-    const slots = await prisma.calendarSlot.findMany({
+    // 1. Fetch active bookings
+    const bookings = await prisma.booking.findMany({
       where: {
         status: {
-          in: ["PENDING", "APPROVED", "LUNAS", "ManualBooking", "ManualBlock"],
+          in: ["PENDING", "APPROVED", "LUNAS", "ManualBooking"],
         },
       },
       include: {
-        booking: {
-          include: {
-            client: true,
-          },
-        },
+        client: true,
       },
     });
 
-    return slots.map((s: any) => ({
-      date: s.date.toISOString(),
-      eventName: s.blockedReason || s.booking?.eventName || "Manual Block",
-      clientName: s.booking?.client?.fullName || "Admin",
-      status: s.status,
+    // 2. Fetch manual blocks
+    const manualBlocks = await prisma.calendarSlot.findMany({
+      where: {
+        status: "ManualBlock",
+      },
+    });
+
+    // 3. Map bookings
+    const bookingSlots = bookings.map((b: any) => ({
+      date: b.bookingDate.toISOString(),
+      eventName: b.eventName || "Sesi Foto",
+      clientName: b.client?.fullName || "Klien",
+      status: b.status,
+      sessionStartTime: b.sessionStartTime || null,
+      sessionEndTime: b.sessionEndTime || null,
+      eventTime: b.eventTime || null,
     }));
+
+    // 4. Map manual blocks
+    const blockSlots = manualBlocks.map((s: any) => ({
+      date: s.date.toISOString(),
+      eventName: s.blockedReason || "Tanggal Diblokir",
+      clientName: "Admin",
+      status: s.status,
+      sessionStartTime: null,
+      sessionEndTime: null,
+      eventTime: null,
+    }));
+
+    // 5. Combine and return
+    return [...bookingSlots, ...blockSlots];
   }
 
 
@@ -216,10 +277,15 @@ export class BookingRepository {
     });
   }
 
-  async rescheduleBooking(id: string, newDate: Date) {
+  async rescheduleBooking(id: string, newDate: Date, sessionStartTime?: string, sessionEndTime?: string, eventTime?: string) {
     return prisma.booking.update({
       where: { id },
-      data: { bookingDate: newDate },
+      data: {
+        bookingDate: newDate,
+        ...(sessionStartTime ? { sessionStartTime } : {}),
+        ...(sessionEndTime ? { sessionEndTime } : {}),
+        ...(eventTime ? { eventTime } : {}),
+      },
       include: {
         client: true,
       },
@@ -322,6 +388,87 @@ export class BookingRepository {
       include: {
         client: true,
         paymentTransactions: true,
+      },
+    });
+  }
+
+  async isTimeSlotOverlapping(date: Date, startTime: string, endTime: string, excludeBookingId?: string): Promise<boolean> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const bookings = await prisma.booking.findMany({
+      where: {
+        bookingDate: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+        status: {
+          in: ["PENDING", "APPROVED", "LUNAS", "ManualBooking"],
+        },
+        sessionStartTime: {
+          not: null,
+        },
+        sessionEndTime: {
+          not: null,
+        },
+        ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
+      },
+    });
+
+    // Check overlap: existingStart < newEnd && existingEnd > newStart
+    const overlap = bookings.some((b: any) => {
+      const existingStart = b.sessionStartTime!;
+      const existingEnd = b.sessionEndTime!;
+      return existingStart < endTime && existingEnd > startTime;
+    });
+
+    return overlap;
+  }
+
+  async getBookedTimeSlotsForDate(date: Date) {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const bookings = await prisma.booking.findMany({
+      where: {
+        bookingDate: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+        status: {
+          in: ["PENDING", "APPROVED", "LUNAS", "ManualBooking"],
+        },
+        sessionStartTime: {
+          not: null,
+        },
+        sessionEndTime: {
+          not: null,
+        },
+      },
+      select: {
+        sessionStartTime: true,
+        sessionEndTime: true,
+        status: true,
+      },
+      orderBy: {
+        sessionStartTime: "asc",
+      },
+    });
+
+    return bookings;
+  }
+
+  async deletePendingBooking(id: string) {
+    return prisma.booking.deleteMany({
+      where: {
+        id,
+        status: "PENDING",
       },
     });
   }

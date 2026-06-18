@@ -34,27 +34,29 @@ model Client {
 }
 
 model Booking {
-  id            String        @id @default(uuid())
-  clientId      String
-  client        Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  packageType   String
-  bookingDate   DateTime
-  eventDate     DateTime?
-  eventTime     String?
-  eventName     String?
-  eventLocation String?
-  notes         String?
-  status        String        @default("PENDING")
-  paymentStatus String        @default("PENDING")
-  snapToken     String?
-  snapUrl       String?
-  dpAmount      Float?
-  totalAmount   Float?
-  source        String        @default("website") // "website" | "manual"
-  calendarSlot  CalendarSlot?
+  id               String        @id @default(uuid())
+  clientId         String
+  client           Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  packageType      String
+  bookingDate      DateTime
+  eventDate        DateTime?
+  eventTime        String?       // Waktu acara umum (semua tipe)
+  eventName        String?
+  eventLocation    String?
+  notes            String?
+  status           String        @default("PENDING")
+  paymentStatus    String        @default("PENDING")
+  snapToken        String?
+  snapUrl          String?
+  dpAmount         Float?
+  totalAmount      Float?
+  source           String        @default("website") // "website" | "manual"
+  sessionStartTime String?       // "HH:MM" — jam mulai sesi (TIME_BASED)
+  sessionEndTime   String?       // "HH:MM" — jam selesai sesi (TIME_BASED), dihitung dari durasi paket
+  calendarSlot     CalendarSlot?
   paymentTransactions PaymentTransaction[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 }
 
 model Category {
@@ -63,21 +65,23 @@ model Category {
   label       String             // e.g. "Pernikahan", "Potret"
   description String?            // Deskripsi singkat untuk halaman booking
   order       Int       @default(0)
+  bookingType String    @default("DATE_ONLY") // "DATE_ONLY" | "TIME_BASED"
   packages    Package[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
 
 model Package {
-  id          String   @id @default(uuid())
-  name        String
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
-  price       Float
-  features    String[]
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  name            String
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  price           Float
+  features        String[]
+  description     String?
+  sessionDuration Int?     // Durasi sesi dalam menit. Hanya relevan untuk kategori TIME_BASED.
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model CalendarSlot {

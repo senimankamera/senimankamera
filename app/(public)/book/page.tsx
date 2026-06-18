@@ -26,10 +26,12 @@ async function BookingFormContainer() {
       name: p.category.name,
       label: p.category.label,
       description: p.category.description,
+      bookingType: p.category.bookingType,
     } : null,
     price: p.price,
     features: p.features,
     description: p.description,
+    sessionDuration: p.sessionDuration,
   }));
 
   const plainCategories = categories.map((c: any) => ({
@@ -37,6 +39,7 @@ async function BookingFormContainer() {
     name: c.name,
     label: c.label,
     description: c.description,
+    bookingType: c.bookingType,
   }));
 
   return (

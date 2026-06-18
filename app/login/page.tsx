@@ -8,9 +8,7 @@ export default function LoginPage() {
       <div className="flex flex-col gap-4 p-6 md:p-10 justify-between">
         <div className="flex justify-center md:justify-start">
           <Link href="/" className="flex items-center gap-2 font-semibold">
-            <div className="w-10 h-10 overflow-hidden rounded-full border border-border bg-neutral-100 flex items-center justify-center">
-              <img src="/logo.jpg" alt="SENIMAN_KAMERA" className="w-full h-full object-cover" />
-            </div>
+            <img src="/logo.png" alt="SENIMAN_KAMERA" className="h-8 w-auto object-contain" />
             <span className="font-serif tracking-tighter text-lg">SENIMAN_KAMERA</span>
           </Link>
         </div>

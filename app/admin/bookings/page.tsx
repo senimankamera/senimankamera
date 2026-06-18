@@ -43,6 +43,10 @@ export default async function AdminBookingsPage({
     notes: b.notes,
     status: b.status,
     source: b.source,
+    dpAmount: b.dpAmount,
+    totalAmount: b.totalAmount,
+    sessionStartTime: b.sessionStartTime,
+    sessionEndTime: b.sessionEndTime,
     createdAt: b.createdAt.toISOString(),
   }));
 

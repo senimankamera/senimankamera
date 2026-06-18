@@ -15,8 +15,11 @@ interface StepPembayaranProps {
   eventLocation: string;
   notes: string;
   isPending: boolean;
+  bookingType: string;
   onSubmit: () => void;
   onBack: () => void;
+  isPayRetry?: boolean;
+  onCancelPayment?: () => void;
 }
 
 export function StepPembayaran({
@@ -31,10 +34,14 @@ export function StepPembayaran({
   eventLocation,
   notes,
   isPending,
+  bookingType,
   onSubmit,
   onBack,
+  isPayRetry,
+  onCancelPayment,
 }: StepPembayaranProps) {
-  const dpAmount = packagePrice * 0.2;
+  const isTimeBased = bookingType === "TIME_BASED";
+  const dpAmount = isTimeBased ? 150000 : packagePrice * 0.2;
 
   const formattedDate = new Date(bookingDate).toLocaleDateString("id-ID", {
     day: "numeric",
@@ -124,9 +131,13 @@ export function StepPembayaran({
                   <Check className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-[10px] uppercase tracking-wider font-bold text-primary">Opsi Pembayaran Terpilih</span>
-                <span className="text-xs font-semibold text-primary">Uang Muka (DP 20%)</span>
+                <span className="text-xs font-semibold text-primary">
+                  {isTimeBased ? "Uang Muka (DP Flat)" : "Uang Muka (DP 20%)"}
+                </span>
                 <p className="text-[11px] text-secondary/70 leading-normal">
-                  Pembayaran DP 20% dilakukan melalui website. Pelunasan sisa 80% dibayarkan di luar website (setelah sesi foto selesai).
+                  {isTimeBased
+                    ? "Pembayaran DP flat Rp 150.000 dilakukan melalui website. Sisa pelunasan dibayarkan di luar website setelah sesi selesai."
+                    : "Pembayaran DP 20% dilakukan melalui website. Pelunasan sisa 80% dibayarkan di luar website setelah sesi selesai."}
                 </p>
               </div>
 
@@ -136,7 +147,7 @@ export function StepPembayaran({
                   <span>{"Rp. " + packagePrice.toLocaleString("id-ID")}</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold text-primary border-t border-dashed border-border/25 pt-2">
-                  <span>Uang Muka (DP 20%):</span>
+                  <span>{isTimeBased ? "Uang Muka (DP):" : "Uang Muka (DP 20%):"}</span>
                   <span>{"Rp. " + dpAmount.toLocaleString("id-ID")}</span>
                 </div>
               </div>
@@ -155,24 +166,37 @@ export function StepPembayaran({
       </div>
 
       {/* Navigation actions */}
-      <div className="flex justify-between pt-4 border-t border-border/20">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4 border-t border-border/20">
         <Button
           type="button"
           variant="outline"
           onClick={onBack}
           disabled={isPending}
-          className="font-sans text-xs uppercase tracking-widest py-5 px-8 rounded-none border-border"
+          className="font-sans text-xs uppercase tracking-widest py-5 px-8 rounded-none border-border order-2 sm:order-1"
         >
           ← Kembali
         </Button>
-        <Button
-          type="button"
-          onClick={onSubmit}
-          disabled={isPending}
-          className="font-sans text-xs uppercase tracking-widest py-5 px-10 rounded-none font-bold text-white transition-all hover:opacity-90 cursor-pointer flex items-center gap-2"
-        >
-          {isPending ? "Memproses Pemesanan..." : "Konfirmasi & Lanjutkan"}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3 order-1 sm:order-2">
+          {isPayRetry && onCancelPayment && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onCancelPayment}
+              disabled={isPending}
+              className="font-sans text-xs uppercase tracking-widest py-5 px-6 rounded-none text-red-700 hover:text-red-800 hover:bg-red-50 border border-transparent hover:border-red-200 cursor-pointer font-semibold"
+            >
+              Ganti Metode Pembayaran
+            </Button>
+          )}
+          <Button
+            type="button"
+            onClick={onSubmit}
+            disabled={isPending}
+            className="font-sans text-xs uppercase tracking-widest py-5 px-10 rounded-none font-bold text-white transition-all hover:opacity-90 cursor-pointer flex items-center gap-2"
+          >
+            {isPending ? "Memproses Pemesanan..." : (isPayRetry ? "Bayar Sekarang" : "Konfirmasi & Lanjutkan")}
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ export async function createCategoryAction(data: {
   label: string;
   description?: string;
   order?: number;
+  bookingType?: string;
 }) {
   try {
     const repo = new CategoryRepository();
@@ -38,8 +39,9 @@ export async function updateCategoryAction(
   data: {
     name?: string;
     label?: string;
-    description?: string;
+    description?: string | null;
     order?: number;
+    bookingType?: string;
   }
 ) {
   try {

@@ -11,6 +11,7 @@ interface CategoryItem {
   name: string;
   label: string;
   description: string | null;
+  bookingType?: string;
 }
 
 interface PackageItem {
@@ -55,13 +56,25 @@ export function ServicesSelector({ initialPackages, categories }: ServicesSelect
                   : "border-border/40 bg-card hover:border-primary/60 text-foreground"
               )}
             >
-              <div>
-                <span className={cn(
-                  "font-sans text-[10px] uppercase tracking-widest font-bold block mb-3",
-                  isSelected ? "text-primary-foreground/75" : "text-secondary"
-                )}>
-                  Kategori
-                </span>
+              <div className="w-full">
+                <div className="flex justify-between items-start w-full mb-3">
+                  <span className={cn(
+                    "font-sans text-[10px] uppercase tracking-widest font-bold block",
+                    isSelected ? "text-primary-foreground/75" : "text-secondary"
+                  )}>
+                    Kategori
+                  </span>
+                  <span className={cn(
+                    "font-sans text-[8px] uppercase tracking-wider px-1.5 py-0.5 font-bold border rounded-none scale-90 origin-right leading-none",
+                    isSelected
+                      ? "border-primary-foreground/20 text-primary-foreground bg-primary-foreground/10"
+                      : cat.bookingType === "TIME_BASED"
+                        ? "border-amber-200 text-amber-700 bg-amber-50 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30"
+                        : "border-blue-200 text-blue-700 bg-blue-50 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30"
+                  )}>
+                    {cat.bookingType === "TIME_BASED" ? "Multi-Session" : "Full-Day"}
+                  </span>
+                </div>
                 <h3 className="font-serif text-lg md:text-xl font-medium leading-tight mb-2">
                   {cat.label}
                 </h3>
@@ -102,13 +115,20 @@ export function ServicesSelector({ initialPackages, categories }: ServicesSelect
         ) : (
           /* Pricelist Details */
           <div className="space-y-8 animate-[fadeIn_0.5s_ease-out]">
-            <div className="border-b border-border/20 pb-4">
-              <span className="font-sans text-[10px] uppercase tracking-widest text-secondary font-bold">
-                Layanan Tersedia
-              </span>
-              <h2 className="font-serif text-2xl md:text-3xl text-primary font-medium mt-1">
-                Tingkat Harga {categories.find(c => c.id === selectedCategory)?.label || "Kategori"}
-              </h2>
+            <div className="border-b border-border/20 pb-6 space-y-4">
+              <div>
+                <span className="font-sans text-[10px] uppercase tracking-widest text-secondary font-bold">
+                  Layanan Tersedia
+                </span>
+                <h2 className="font-serif text-2xl md:text-3xl text-primary font-medium mt-1">
+                  Tingkat Harga {categories.find(c => c.id === selectedCategory)?.label || "Kategori"}
+                </h2>
+              </div>
+              <p className="font-sans text-sm text-secondary font-light max-w-3xl leading-relaxed">
+                {categories.find(c => c.id === selectedCategory)?.bookingType === "TIME_BASED"
+                  ? "Kategori dengan label MULTI-SESSION dipesan berdasarkan Jam Sesi, berbeda dengan kategori FULL-DAY yang memerlukan satu hari penuh untuk satu booking. Jika terdapat booking lain pada jam tertentu, maka slot waktu tersebut tidak dapat dipilih. Namun, pelanggan tetap dapat memilih jam lain yang masih tersedia pada tanggal yang sama. Sebagai contoh, jika terdapat booking pada pukul 08.00–09.00, maka pelanggan lain dapat melakukan booking mulai pukul 09.00 atau setelahnya, selama tidak terjadi benturan jadwal."
+                  : "Kategori dengan label FULL-DAY dipesan berdasarkan Tanggal Acara, berbeda dengan kategori MULTI-SESSION yang menggunakan sistem per Jam. Jika suatu tanggal sudah dipesan oleh klien lain, maka tanggal tersebut akan dianggap penuh dan tidak dapat dipilih kembali oleh pelanggan lain. Oleh karena itu, setiap tanggal hanya dapat digunakan untuk satu booking pada kategori FULL-DAY."}
+              </p>
             </div>
 
             {activePackages.length === 0 ? (

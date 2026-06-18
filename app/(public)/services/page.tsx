@@ -1,4 +1,3 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PackageRepository } from "@/src/modules/booking/repositories/package.repository";
 import { GetPackagesUseCase } from "@/src/modules/booking/use-cases/get-packages.use-case";
 import { CategoryRepository } from "@/src/modules/booking/repositories/category.repository";
@@ -19,25 +18,6 @@ export default async function ServicesPage() {
 
   const serializedPackages = JSON.parse(JSON.stringify(packages));
   const serializedCategories = JSON.parse(JSON.stringify(categories));
-
-  const faqs = [
-    {
-      question: "Seberapa jauh hari kami harus melakukan pemesanan?",
-      answer: "Untuk pernikahan, kami menyarankan Anda menghubungi kami 9 hingga 12 bulan sebelumnya, terutama untuk tanggal antara Mei hingga Oktober. Untuk sesi potret dan acara kecil, 2 hingga 3 bulan biasanya sudah cukup."
-    },
-    {
-      question: "Apakah Anda melayani dokumentasi pernikahan luar kota / luar negeri?",
-      answer: "Tentu saja. Kami sering melakukan perjalanan luar kota dan internasional untuk sesi dokumentasi. Biaya perjalanan kustom akan diberikan selama proses konsultasi, yang biasanya mencakup tiket pesawat, akomodasi 2 malam, dan transportasi lokal."
-    },
-    {
-      question: "Berapa lama waktu pengerjaan untuk galeri foto kami?",
-      answer: "Kami bangga dengan proses pengeditan kami yang teliti. Galeri untuk sesi potret dikirimkan dalam waktu 3 minggu. Galeri pernikahan lengkap dikirimkan dalam waktu 6 hingga 8 minggu, dengan beberapa foto cuplikan (sneak peek) diberikan dalam waktu 72 jam setelah acara."
-    },
-    {
-      question: "Apakah kami bisa memesan cetakan fisik dan album melalui Anda?",
-      answer: "Ya, paket pernikahan signature kami sudah termasuk album pusaka fine art. Selain itu, galeri online Anda terhubung langsung dengan laboratorium profesional mitra kami, memungkinkan Anda dan tamu Anda memesan cetakan berkualitas museum, bingkai seni, dan kanvas secara mudah."
-    }
-  ];
 
   return (
     <div className="w-full">
@@ -108,31 +88,6 @@ export default async function ServicesPage() {
 
           </div>
         </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-24 md:py-32 px-6 md:px-20 w-full max-w-3xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="font-serif text-3xl md:text-4xl text-primary mb-4 font-medium">
-            Detail & Pertanyaan
-          </h2>
-          <p className="font-sans text-sm text-secondary font-light">
-            Pertanyaan umum mengenai proses dan hasil pengerjaan kami.
-          </p>
-        </div>
-
-        <Accordion className="w-full space-y-2">
-          {faqs.map((faq, index) => (
-            <AccordionItem key={index} value={`item-${index}`} className="border-b border-border/40 pb-2">
-              <AccordionTrigger className="font-serif text-lg text-primary py-4 hover:no-underline hover:text-secondary transition-colors font-medium">
-                {faq.question}
-              </AccordionTrigger>
-              <AccordionContent className="font-sans text-sm text-secondary leading-relaxed pt-2 pb-6">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
       </section>
     </div>
   );

@@ -40,6 +40,7 @@ export class CategoryRepository {
     label: string;
     description?: string;
     order?: number;
+    bookingType?: string;
   }) {
     return prisma.category.create({
       data,
@@ -51,8 +52,9 @@ export class CategoryRepository {
     data: {
       name?: string;
       label?: string;
-      description?: string;
+      description?: string | null;
       order?: number;
+      bookingType?: string;
     }
   ) {
     return prisma.category.update({
