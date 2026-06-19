@@ -80,6 +80,7 @@ export async function POST(request: Request) {
         fullName: booking.client.fullName,
         email: booking.client.email,
         phoneNumber: booking.client.phoneNumber || undefined,
+        instagram: booking.client.instagram || undefined,
         categoryName: pkg?.category?.label || pkg?.category?.name || undefined,
         packageType: booking.packageType,
         bookingDate: booking.bookingDate,

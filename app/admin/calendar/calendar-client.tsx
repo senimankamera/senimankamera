@@ -32,10 +32,30 @@ import { updateBookingStatusAction } from "@/src/modules/booking/actions/update-
 import { useModal } from "@/components/modal-provider";
 import { toast } from "sonner";
 
+function InstagramIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
+
 interface Client {
   fullName: string;
   email: string;
   phoneNumber: string | null;
+  instagram: string | null;
 }
 
 interface Booking {
@@ -100,6 +120,7 @@ export function CalendarClient({ initialSlots, packages, stats }: CalendarClient
     fullName: "",
     email: "",
     phoneNumber: "",
+    instagram: "",
     packageType: packages[0]?.name || "",
     eventTime: "10:00",
     eventName: "",
@@ -239,6 +260,7 @@ export function CalendarClient({ initialSlots, packages, stats }: CalendarClient
               fullName: bookingForm.fullName,
               email: bookingForm.email,
               phoneNumber: bookingForm.phoneNumber || null,
+              instagram: bookingForm.instagram || null,
             },
             packageType: res.data.packageType,
             bookingDate: res.data.bookingDate,
@@ -259,6 +281,7 @@ export function CalendarClient({ initialSlots, packages, stats }: CalendarClient
           fullName: "",
           email: "",
           phoneNumber: "",
+          instagram: "",
           packageType: packages[0]?.name || "",
           eventTime: "10:00",
           eventName: "",
@@ -561,6 +584,11 @@ export function CalendarClient({ initialSlots, packages, stats }: CalendarClient
                                   <Phone className="w-3.5 h-3.5" /> {selectedSlot.booking.client.phoneNumber}
                                 </div>
                               )}
+                              {selectedSlot.booking.client.instagram && (
+                                <div className="flex items-center gap-2">
+                                  <InstagramIcon className="w-3.5 h-3.5 text-secondary/60" /> {selectedSlot.booking.client.instagram}
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -826,6 +854,19 @@ export function CalendarClient({ initialSlots, packages, stats }: CalendarClient
                       value={bookingForm.phoneNumber}
                       onChange={(e) => setBookingForm({ ...bookingForm, phoneNumber: e.target.value })}
                       placeholder="Contoh: 08123456789"
+                      className="rounded-none border-border/40 text-xs py-4"
+                    />
+                  </div>
+
+                  {/* Instagram */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase font-bold text-secondary tracking-wider">Username Instagram *</label>
+                    <Input
+                      type="text"
+                      required
+                      value={bookingForm.instagram}
+                      onChange={(e) => setBookingForm({ ...bookingForm, instagram: e.target.value })}
+                      placeholder="misal: @najmialazhar"
                       className="rounded-none border-border/40 text-xs py-4"
                     />
                   </div>

@@ -4,10 +4,30 @@ import { useState } from "react";
 import { User, Mail, Phone, BookOpen, MapPin, AlignLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+function InstagramIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
+
 interface StepDataPemesanProps {
   fullName: string;
   email: string;
   phoneNumber: string;
+  instagram: string;
   eventName: string;
   eventLocation: string;
   notes: string;
@@ -15,6 +35,7 @@ interface StepDataPemesanProps {
     fullName: string;
     email: string;
     phoneNumber: string;
+    instagram: string;
     eventName: string;
     eventLocation: string;
     notes: string;
@@ -27,6 +48,7 @@ export function StepDataPemesan({
   fullName,
   email,
   phoneNumber,
+  instagram,
   eventName,
   eventLocation,
   notes,
@@ -46,6 +68,9 @@ export function StepDataPemesan({
     }
     if (!phoneNumber || phoneNumber.trim().length < 8) {
       newErrors.phoneNumber = "Nomor WhatsApp wajib diisi (minimal 8 karakter)";
+    }
+    if (!instagram || instagram.trim().length === 0) {
+      newErrors.instagram = "Instagram wajib diisi (isi '-' jika tidak memiliki Instagram)";
     }
     if (!eventName || eventName.trim().length < 2) {
       newErrors.eventName = "Nama acara harus diisi minimal 2 karakter";
@@ -134,6 +159,25 @@ export function StepDataPemesan({
               />
             </div>
             {errors.email && <p className="text-xs text-red-700 font-semibold">{errors.email}</p>}
+          </div>
+
+          {/* Instagram */}
+          <div className="space-y-1.5">
+            <label htmlFor="instagram" className="text-[10px] uppercase tracking-wider text-secondary font-bold block">
+              Username Instagram <span className="text-red-700">*</span>
+            </label>
+            <div className="relative">
+              <InstagramIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary/60" />
+              <input
+                type="text"
+                id="instagram"
+                placeholder="misal: @najmialazhar"
+                value={instagram}
+                onChange={(e) => onChangeFields({ instagram: e.target.value })}
+                className="w-full pl-10 pr-4 py-3 bg-transparent border border-border/40 focus:border-primary focus:outline-none transition-colors rounded-none placeholder:text-secondary/40 text-primary text-xs"
+              />
+            </div>
+            {errors.instagram && <p className="text-xs text-red-700 font-semibold">{errors.instagram}</p>}
           </div>
 
           {/* Event Name */}

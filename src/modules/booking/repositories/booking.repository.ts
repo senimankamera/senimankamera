@@ -5,6 +5,7 @@ export interface CreateBookingInput {
   fullName: string;
   email: string;
   phoneNumber?: string;
+  instagram?: string;
   packageType: string;
   bookingDate: Date;
   eventTime?: string;
@@ -29,11 +30,13 @@ export class BookingRepository {
       update: {
         fullName: data.fullName,
         ...(data.phoneNumber ? { phoneNumber: data.phoneNumber } : {}),
+        ...(data.instagram ? { instagram: data.instagram } : {}),
       },
       create: {
         fullName: data.fullName,
         email: data.email,
         phoneNumber: data.phoneNumber,
+        instagram: data.instagram,
       },
     });
 

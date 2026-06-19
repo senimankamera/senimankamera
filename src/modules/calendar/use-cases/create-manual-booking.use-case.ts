@@ -5,6 +5,7 @@ export interface CreateManualBookingInput {
   fullName: string;
   email: string;
   phoneNumber?: string;
+  instagram?: string;
   packageType: string;
   bookingDate: Date;
   eventTime?: string;
@@ -40,6 +41,7 @@ export class CreateManualBookingUseCase {
       fullName: input.fullName,
       email: input.email,
       phoneNumber: input.phoneNumber,
+      instagram: input.instagram,
       packageType: targetPackage?.name || input.packageType,
       bookingDate: bookingDate,
       eventTime: input.eventTime,

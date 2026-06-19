@@ -9,6 +9,7 @@ export async function createManualBookingAction(input: {
   fullName: string;
   email: string;
   phoneNumber?: string;
+  instagram?: string;
   packageType: string;
   bookingDateStr: string;
   eventTime?: string;
@@ -26,6 +27,7 @@ export async function createManualBookingAction(input: {
       fullName: input.fullName,
       email: input.email,
       phoneNumber: input.phoneNumber,
+      instagram: input.instagram,
       packageType: input.packageType,
       bookingDate: bookingDate,
       eventTime: input.eventTime,

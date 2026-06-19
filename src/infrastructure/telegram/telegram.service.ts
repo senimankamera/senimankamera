@@ -13,6 +13,7 @@ export class TelegramService {
     fullName: string;
     email: string;
     phoneNumber?: string;
+    instagram?: string;
     categoryName?: string;
     packageType: string;
     bookingDate: Date;
@@ -49,6 +50,7 @@ export class TelegramService {
 👤 <b>Nama Klien:</b> ${booking.fullName}
 📧 <b>Email:</b> ${booking.email}
 📞 <b>No. HP / WA:</b> ${booking.phoneNumber || "-"}
+🔗 <b>Instagram:</b> ${booking.instagram || "-"}
 📦 <b>Paket Event:</b> ${paketLabel}
 📅 <b>Tanggal Booking:</b> ${formattedDate}
 ⏰ <b>Waktu Acara:</b> ${booking.eventTime || "-"}

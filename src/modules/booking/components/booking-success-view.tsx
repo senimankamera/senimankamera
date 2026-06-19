@@ -8,6 +8,7 @@ interface ClientData {
   fullName: string;
   email: string;
   phoneNumber?: string | null;
+  instagram?: string | null;
 }
 
 interface BookingData {
@@ -35,7 +36,7 @@ export function BookingSuccessView({ booking }: BookingSuccessViewProps) {
   const isTimeBased = !!booking.sessionStartTime;
 
   const waText = encodeURIComponent(
-    `Halo Kak, saya sudah melakukan booking dan pembayaran DP untuk acara saya dengan ID: ${booking.id}.\n\nBerikut detail pesanan saya:\n- Klien: ${booking.client.fullName}\n- Paket: Sesi ${booking.packageType}\n- Acara: ${booking.eventName || "-"}\n- Tanggal: ${new Date(booking.bookingDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}\n- Waktu: ${isTimeBased ? `${booking.sessionStartTime} – ${booking.sessionEndTime}` : booking.eventTime || "-"} WIB\n\nMohon dibantu untuk proses konfirmasi booking. Terima kasih.`
+    `Halo Kak, saya sudah melakukan booking dan pembayaran DP untuk acara saya dengan ID: ${booking.id}.\n\nBerikut detail pesanan saya:\n- Klien: ${booking.client.fullName}\n- Instagram: ${booking.client.instagram || "-"}\n- Paket: Sesi ${booking.packageType}\n- Acara: ${booking.eventName || "-"}\n- Tanggal: ${new Date(booking.bookingDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}\n- Waktu: ${isTimeBased ? `${booking.sessionStartTime} – ${booking.sessionEndTime}` : booking.eventTime || "-"} WIB\n\nMohon dibantu untuk proses konfirmasi booking. Terima kasih.`
   );
   const waUrl = `https://wa.me/6285721598190?text=${waText}`;
 
@@ -101,6 +102,10 @@ export function BookingSuccessView({ booking }: BookingSuccessViewProps) {
         <div className="flex justify-between">
           <span className="text-secondary">Nama Klien:</span>
           <span className="text-primary font-medium">{booking.client.fullName}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-secondary">Instagram:</span>
+          <span className="text-primary font-medium">{booking.client.instagram || "-"}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-secondary">Nama Acara:</span>

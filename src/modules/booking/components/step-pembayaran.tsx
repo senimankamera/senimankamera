@@ -11,6 +11,7 @@ interface StepPembayaranProps {
   fullName: string;
   email: string;
   phoneNumber: string;
+  instagram: string;
   eventName: string;
   eventLocation: string;
   notes: string;
@@ -30,6 +31,7 @@ export function StepPembayaran({
   fullName,
   email,
   phoneNumber,
+  instagram,
   eventName,
   eventLocation,
   notes,
@@ -100,6 +102,11 @@ export function StepPembayaran({
             <div className="flex justify-between">
               <span className="text-secondary">Nama Pemesan:</span>
               <span className="text-primary font-medium">{fullName}</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-secondary">Instagram:</span>
+              <span className="text-primary font-medium">{instagram}</span>
             </div>
 
             <div className="flex justify-between">

@@ -25,6 +25,7 @@ interface Client {
   fullName: string;
   email: string;
   phoneNumber: string | null;
+  instagram: string | null;
 }
 
 interface PaymentTransaction {
@@ -127,6 +128,7 @@ export function RecapClient({ bookings }: RecapClientProps) {
     const matchesSearch = 
       booking.client.fullName.toLowerCase().includes(search.toLowerCase()) ||
       (booking.eventName && booking.eventName.toLowerCase().includes(search.toLowerCase())) ||
+      (booking.client.instagram && booking.client.instagram.toLowerCase().includes(search.toLowerCase())) ||
       booking.packageType.toLowerCase().includes(search.toLowerCase());
 
     return matchesSearch && isDateInRange(booking.createdAt);
@@ -189,6 +191,7 @@ export function RecapClient({ bookings }: RecapClientProps) {
         "Nama Client": b.client.fullName,
         "Email Client": b.client.email,
         "No Handphone": b.client.phoneNumber || "-",
+        "Instagram": b.client.instagram || "-",
         "Paket / Event": b.packageType,
         "Nama Event": b.eventName || "-",
         "Tanggal Booking": formatDate(b.bookingDate),
@@ -211,6 +214,7 @@ export function RecapClient({ bookings }: RecapClientProps) {
       "Nama Client", 
       "Email Client", 
       "No Handphone", 
+      "Instagram",
       "Paket / Event", 
       "Nama Event", 
       "Tanggal Booking", 
@@ -227,6 +231,7 @@ export function RecapClient({ bookings }: RecapClientProps) {
         `"${b.client.fullName.replace(/"/g, '""')}"`,
         b.client.email,
         b.client.phoneNumber || "-",
+        `"${(b.client.instagram || "-").replace(/"/g, '""')}"`,
         `"${b.packageType.replace(/"/g, '""')}"`,
         `"${(b.eventName || "-").replace(/"/g, '""')}"`,
         formatDate(b.bookingDate),
@@ -431,6 +436,9 @@ export function RecapClient({ bookings }: RecapClientProps) {
                       <td className="py-4 px-6">
                         <div className="font-semibold text-primary">{b.client.fullName}</div>
                         <div className="text-[10px] text-secondary mt-0.5">{b.client.email}</div>
+                        {b.client.instagram && (
+                          <div className="text-[10px] text-secondary mt-0.5 font-mono">@{b.client.instagram.replace(/^@/, '')}</div>
+                        )}
                       </td>
                       <td className="py-4 px-6">
                         <div className="font-medium text-primary">{b.packageType}</div>

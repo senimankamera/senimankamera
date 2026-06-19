@@ -29,10 +29,30 @@ import { rescheduleBookingAction } from "@/src/modules/booking/actions/reschedul
 import { useModal } from "@/components/modal-provider";
 import { toast } from "sonner";
 
+function InstagramIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
+  );
+}
+
 interface Client {
   fullName: string;
   email: string;
   phoneNumber: string | null;
+  instagram: string | null;
 }
 
 interface Booking {
@@ -115,6 +135,7 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
       booking.client.fullName.toLowerCase().includes(search.toLowerCase()) ||
       (booking.eventName && booking.eventName.toLowerCase().includes(search.toLowerCase())) ||
       (booking.client.phoneNumber && booking.client.phoneNumber.includes(search)) ||
+      (booking.client.instagram && booking.client.instagram.toLowerCase().includes(search.toLowerCase())) ||
       booking.id.toLowerCase().includes(search.toLowerCase());
 
     const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
@@ -494,6 +515,12 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
                     <div className="flex items-center gap-3">
                       <Phone className="w-4 h-4 text-secondary/60" />
                       <span>{selectedBooking.client.phoneNumber}</span>
+                    </div>
+                  )}
+                  {selectedBooking.client.instagram && (
+                    <div className="flex items-center gap-3">
+                      <InstagramIcon className="w-4 h-4 text-secondary/60" />
+                      <span>{selectedBooking.client.instagram}</span>
                     </div>
                   )}
                 </div>

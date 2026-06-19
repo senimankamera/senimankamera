@@ -147,6 +147,7 @@ export class CreateBookingUseCase {
       fullName: parsed.fullName,
       email: parsed.email,
       phoneNumber: parsed.phoneNumber,
+      instagram: parsed.instagram,
       packageType: targetPackage?.name || parsed.packageType,
       bookingDate: bookingDate,
       eventTime: bookingType === "TIME_BASED" ? parsed.sessionStartTime : parsed.eventTime,

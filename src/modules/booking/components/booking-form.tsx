@@ -67,6 +67,7 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [instagram, setInstagram] = useState("");
   const [eventName, setEventName] = useState("");
   const [eventLocation, setEventLocation] = useState("");
   const [notes, setNotes] = useState("");
@@ -260,6 +261,7 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
       fullName,
       email,
       phoneNumber,
+      instagram,
       packageType,
       bookingDate,
       eventTime: finalEventTime,
@@ -424,6 +426,7 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
             fullName={fullName}
             email={email}
             phoneNumber={phoneNumber}
+            instagram={instagram}
             eventName={eventName}
             eventLocation={eventLocation}
             notes={notes}
@@ -431,6 +434,7 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
               if (fields.fullName !== undefined) setFullName(fields.fullName);
               if (fields.email !== undefined) setEmail(fields.email);
               if (fields.phoneNumber !== undefined) setPhoneNumber(fields.phoneNumber);
+              if (fields.instagram !== undefined) setInstagram(fields.instagram);
               if (fields.eventName !== undefined) setEventName(fields.eventName);
               if (fields.eventLocation !== undefined) setEventLocation(fields.eventLocation);
               if (fields.notes !== undefined) setNotes(fields.notes);
@@ -453,6 +457,7 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
             fullName={fullName}
             email={email}
             phoneNumber={phoneNumber}
+            instagram={instagram}
             eventName={eventName}
             eventLocation={eventLocation}
             notes={notes}
