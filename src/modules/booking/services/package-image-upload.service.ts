@@ -1,5 +1,4 @@
 import { createClient } from "@/src/infrastructure/supabase/server";
-import sharp from "sharp";
 import crypto from "crypto";
 
 export class PackageImageUploadService {
@@ -26,6 +25,7 @@ export class PackageImageUploadService {
     let optimizedBuffer: Buffer;
     
     try {
+      const sharp = (await import("sharp")).default;
       // Crop & resize to exactly 4:5 aspect ratio (800 width, 1000 height)
       optimizedBuffer = await sharp(buffer)
         .resize({

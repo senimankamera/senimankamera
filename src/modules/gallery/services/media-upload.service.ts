@@ -1,5 +1,4 @@
 import { createClient } from "@/src/infrastructure/supabase/server";
-import sharp from "sharp";
 import crypto from "crypto";
 
 export class MediaUploadService {
@@ -39,6 +38,7 @@ export class MediaUploadService {
     let contentType = "image/webp";
 
     try {
+      const sharp = (await import("sharp")).default;
       const image = sharp(buffer);
       const metadata = await image.metadata();
 
