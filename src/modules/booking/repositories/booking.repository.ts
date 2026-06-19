@@ -1,5 +1,16 @@
 import { prisma } from "@/src/infrastructure/prisma/client";
 
+// Helper: tambah menit ke string waktu "HH:MM"
+function addMinutesToTime(timeStr: string, minutes: number): string {
+  const [hours, mins] = timeStr.split(":").map(Number);
+  const date = new Date();
+  date.setHours(hours, mins, 0, 0);
+  date.setMinutes(date.getMinutes() + minutes);
+  const h = String(date.getHours()).padStart(2, "0");
+  const m = String(date.getMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
 export interface CreateBookingInput {
   id?: string;
   fullName: string;
@@ -421,11 +432,15 @@ export class BookingRepository {
       },
     });
 
-    // Check overlap: existingStart < newEnd && existingEnd > newStart
+    // Check overlap dengan jeda 15 menit:
+    // Booking baru tidak boleh mulai sebelum (existingEnd + 15 menit)
+    const BUFFER_MINUTES = 15;
     const overlap = bookings.some((b: any) => {
       const existingStart = b.sessionStartTime!;
       const existingEnd = b.sessionEndTime!;
-      return existingStart < endTime && existingEnd > startTime;
+      // Tambahkan buffer 15 menit pada akhir sesi yang sudah ada
+      const existingEndWithBuffer = addMinutesToTime(existingEnd, BUFFER_MINUTES);
+      return existingStart < endTime && existingEndWithBuffer > startTime;
     });
 
     return overlap;

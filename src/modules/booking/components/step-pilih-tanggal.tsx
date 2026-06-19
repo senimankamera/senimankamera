@@ -418,6 +418,11 @@ export function StepPilihTanggal({
                       <span className="text-[10px] text-secondary font-bold uppercase tracking-wider block">
                         Jadwal Terisi pada Tanggal Ini:
                       </span>
+                      {/* Info jeda 15 menit */}
+                      <div className="flex items-start gap-1.5 text-[10px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 px-2.5 py-2">
+                        <Clock className="w-3 h-3 flex-shrink-0 mt-0.5 text-amber-600" />
+                        <span>Terdapat jeda persiapan studio <strong>15 menit</strong> antar sesi. Sesi berikutnya baru bisa dimulai 15 menit setelah sesi sebelumnya selesai.</span>
+                      </div>
                       {isFetchingSlots ? (
                         <div className="text-[11px] text-secondary/60 animate-pulse italic py-1">
                           Memuat jadwal terisi...
@@ -437,7 +442,7 @@ export function StepPilihTanggal({
                                 <Clock className="w-3 h-3 text-red-600/60" />
                                 {slot.startTime} – {slot.endTime} WIB
                               </span>
-                              <span className="text-[8px] uppercase tracking-wider font-bold">Terisi</span>
+                              <span className="text-[8px] uppercase tracking-wider font-bold">Terisi + Jeda</span>
                             </div>
                           ))}
                         </div>
@@ -478,6 +483,12 @@ export function StepPilihTanggal({
                         Rencana Sesi: <span className="font-bold">{selectedTime} WIB</span> s/d{" "}
                         <span className="font-bold">{calculateEndTime(selectedTime, sessionDuration)} WIB</span>{" "}
                         ({sessionDuration} menit durasi paket)
+                      </div>
+
+                      {/* Pengingat jeda 15 menit */}
+                      <div className="flex items-start gap-1.5 text-[10px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 px-2.5 py-2">
+                        <Clock className="w-3 h-3 flex-shrink-0 mt-0.5 text-amber-600" />
+                        <span>Terdapat jeda persiapan studio <strong>15 menit</strong> antar sesi. Sesi berikutnya baru bisa dimulai pukul <strong>{calculateEndTime(selectedTime, sessionDuration + 15)} WIB</strong>.</span>
                       </div>
 
                       {isTimeSlotOverlapping && (
