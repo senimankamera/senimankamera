@@ -109,29 +109,12 @@ export class UpdateBookingStatusUseCase {
     // Send Telegram Notification for APPROVED, REJECTED, or LUNAS
     if (status === "APPROVED" || status === "REJECTED" || status === "LUNAS") {
       const telegramService = new TelegramService();
-      if (status === "APPROVED") {
-        await telegramService.sendBookingNotification({
-          fullName: booking.client.fullName,
-          email: booking.client.email,
-          phoneNumber: booking.client.phoneNumber || undefined,
-          categoryName: pkg?.category?.label || pkg?.category?.name || undefined,
-          packageType: booking.packageType,
-          bookingDate: booking.bookingDate,
-          eventTime: booking.eventTime || undefined,
-          eventName: booking.eventName || undefined,
-          eventLocation: booking.eventLocation || undefined,
-          notes: booking.notes || undefined,
-          dpAmount: booking.dpAmount || undefined,
-          totalAmount: booking.totalAmount || undefined,
-        });
-      } else {
-        await telegramService.sendBookingStatusNotification(
-          booking.client.fullName,
-          booking.eventName || booking.packageType,
-          booking.bookingDate,
-          status
-        );
-      }
+      await telegramService.sendBookingStatusNotification(
+        booking.client.fullName,
+        booking.eventName || booking.packageType,
+        booking.bookingDate,
+        status
+      );
     }
 
     return updatedBooking;
