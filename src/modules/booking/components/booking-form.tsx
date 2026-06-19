@@ -58,6 +58,7 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
 
   // Form Inputs
   const [packageType, setPackageType] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [bookingDate, setBookingDate] = useState("");
   const [eventTime, setEventTime] = useState("");
   const [fullName, setFullName] = useState("");
@@ -132,12 +133,14 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
   // Pre-fill packageType from query param
   useEffect(() => {
     const pkg = searchParams.get("package");
+    const categoryId = searchParams.get("categoryId");
     if (pkg) {
       const matched = initialPackages.find(
-        (p) => p.name.toLowerCase() === pkg.toLowerCase()
+        (p) => p.name.toLowerCase() === pkg.toLowerCase() && (!categoryId || p.categoryId === categoryId)
       );
       if (matched) {
         setPackageType(matched.name);
+        setSelectedCategoryId(matched.categoryId);
         
         // Set category properties so step 2 calendar loads correctly
         const cat = categories.find((c) => c.id === matched.categoryId);
@@ -155,7 +158,9 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
   }, [searchParams, initialPackages, categories]);
 
   // Find selected package object to get price details
-  const selectedPackageObj = initialPackages.find((p) => p.name === packageType);
+  const selectedPackageObj = initialPackages.find(
+    (p) => p.name === packageType && (!selectedCategoryId || p.categoryId === selectedCategoryId)
+  );
   const packagePrice = selectedPackageObj?.price || 0;
 
   const handleNext = () => {
@@ -260,6 +265,7 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
       notes,
       paymentType: "dp" as const,
       sessionStartTime: isTimeBased ? eventTime : undefined,
+      categoryId: selectedCategoryId,
     };
 
     // Client-side validation using Zod
@@ -466,13 +472,15 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
             initialPackages={initialPackages}
             categories={categories}
             selectedPackageName={packageType}
+            selectedCategoryId={selectedCategoryId}
             onSelectPackage={setPackageType}
-            onCategoryChange={(bookingType, sessionDuration) => {
+            onCategoryChange={(categoryId, bookingType, sessionDuration) => {
+              setSelectedCategoryId(categoryId);
               setSelectedCategoryBookingType(bookingType);
               setSelectedSessionDuration(sessionDuration);
               if (bookingType === "TIME_BASED") {
                 setEventName((prev) => prev === "" ? "Foto Studio Session" : prev);
-                setEventLocation((prev) => prev === "" ? "Studio" : prev);
+                setEventLocation((prev) => (prev === "" ? "Studio" : prev));
               }
             }}
             onNext={handleNext}

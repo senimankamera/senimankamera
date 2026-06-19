@@ -171,7 +171,7 @@ export function ServicesSelector({ initialPackages, categories }: ServicesSelect
                       </div>
 
                       <Button
-                        render={<Link href={`/book?package=${encodeURIComponent(pkg.name)}`} />}
+                        render={<Link href={`/book?package=${encodeURIComponent(pkg.name)}&categoryId=${encodeURIComponent(pkg.categoryId)}`} />}
                         nativeButton={false}
                         className="w-full font-sans text-xs uppercase tracking-widest py-6 rounded-none mt-auto cursor-pointer"
                       >

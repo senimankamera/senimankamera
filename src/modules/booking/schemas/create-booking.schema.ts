@@ -15,6 +15,7 @@ export const CreateBookingSchema = z.object({
   paymentType: z.enum(["dp"]),
   sessionStartTime: z.string().optional(),
   sessionEndTime: z.string().optional(),
+  categoryId: z.string().optional(),
 });
 
 export type CreateBookingInputType = z.infer<typeof CreateBookingSchema>;

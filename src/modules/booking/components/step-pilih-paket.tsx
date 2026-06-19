@@ -28,8 +28,9 @@ interface StepPilihPaketProps {
   initialPackages: PackageItem[];
   categories: CategoryItem[];
   selectedPackageName: string;
+  selectedCategoryId: string;
   onSelectPackage: (packageName: string) => void;
-  onCategoryChange?: (bookingType: string, sessionDuration: number | null) => void;
+  onCategoryChange?: (categoryId: string, bookingType: string, sessionDuration: number | null) => void;
   onNext: () => void;
 }
 
@@ -37,25 +38,32 @@ export function StepPilihPaket({
   initialPackages,
   categories,
   selectedPackageName,
+  selectedCategoryId,
   onSelectPackage,
   onCategoryChange,
   onNext,
 }: StepPilihPaketProps) {
   // Find category of currently selected package (if any)
-  const currentSelectedPkg = initialPackages.find(p => p.name === selectedPackageName);
+  const currentSelectedPkg = initialPackages.find(
+    (p) => p.name === selectedPackageName && (!selectedCategoryId || p.categoryId === selectedCategoryId)
+  );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    currentSelectedPkg ? currentSelectedPkg.categoryId : null
+    selectedCategoryId || (currentSelectedPkg ? currentSelectedPkg.categoryId : null)
   );
 
-  // Sync selectedCategory state when selectedPackageName prop updates (e.g. pre-filled from query param after mount)
+  // Sync selectedCategory state when selectedCategoryId or selectedPackageName prop updates (e.g. pre-filled from query param after mount)
   useEffect(() => {
-    if (selectedPackageName) {
-      const pkg = initialPackages.find(p => p.name === selectedPackageName);
+    if (selectedCategoryId) {
+      setSelectedCategory(selectedCategoryId);
+    } else if (selectedPackageName) {
+      const pkg = initialPackages.find(
+        (p) => p.name === selectedPackageName && (!selectedCategoryId || p.categoryId === selectedCategoryId)
+      );
       if (pkg && pkg.categoryId !== selectedCategory) {
         setSelectedCategory(pkg.categoryId);
       }
     }
-  }, [selectedPackageName, initialPackages, selectedCategory]);
+  }, [selectedCategoryId, selectedPackageName, initialPackages, selectedCategory]);
 
   const activePackages = selectedCategory
     ? initialPackages.filter((pkg) => pkg.categoryId === selectedCategory)
@@ -63,22 +71,25 @@ export function StepPilihPaket({
 
   // Notify parent on load or when selection is updated
   useEffect(() => {
-    if (selectedPackageName) {
-      const pkg = initialPackages.find(p => p.name === selectedPackageName);
+    if (selectedPackageName && selectedCategory) {
+      const pkg = initialPackages.find(
+        (p) => p.name === selectedPackageName && p.categoryId === selectedCategory
+      );
       if (pkg) {
-        const cat = categories.find(c => c.id === pkg.categoryId);
+        const cat = categories.find((c) => c.id === pkg.categoryId);
         if (onCategoryChange) {
-          onCategoryChange(cat?.bookingType || "DATE_ONLY", pkg.sessionDuration || null);
+          onCategoryChange(pkg.categoryId, cat?.bookingType || "DATE_ONLY", pkg.sessionDuration || null);
         }
       }
     }
-  }, [selectedPackageName, initialPackages, categories, onCategoryChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPackageName, selectedCategory, initialPackages, categories]);
 
   const handleSelectPackageLocal = (pkg: PackageItem) => {
     onSelectPackage(pkg.name);
-    const cat = categories.find(c => c.id === pkg.categoryId);
+    const cat = categories.find((c) => c.id === pkg.categoryId);
     if (onCategoryChange) {
-      onCategoryChange(cat?.bookingType || "DATE_ONLY", pkg.sessionDuration || null);
+      onCategoryChange(pkg.categoryId, cat?.bookingType || "DATE_ONLY", pkg.sessionDuration || null);
     }
   };
 
@@ -102,7 +113,13 @@ export function StepPilihPaket({
             <button
               key={cat.id}
               type="button"
-              onClick={() => setSelectedCategory(cat.id)}
+              onClick={() => {
+                setSelectedCategory(cat.id);
+                onSelectPackage("");
+                if (onCategoryChange) {
+                  onCategoryChange(cat.id, cat.bookingType || "DATE_ONLY", null);
+                }
+              }}
               className={cn(
                 "p-3.5 sm:p-5 text-left border transition-all duration-300 group cursor-pointer flex flex-col justify-between h-[135px] sm:h-[150px] rounded-none",
                 isSelected

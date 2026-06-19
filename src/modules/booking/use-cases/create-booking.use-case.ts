@@ -61,7 +61,14 @@ export class CreateBookingUseCase {
 
     // Get package price details
     const packageRepo = new PackageRepository();
-    const targetPackage = await packageRepo.findByNameOrCategory(parsed.packageType);
+    let targetPackage;
+    if (parsed.categoryId) {
+      const pkgs = await packageRepo.findByCategory(parsed.categoryId);
+      targetPackage = pkgs.find((p: any) => p.name.toLowerCase() === parsed.packageType.toLowerCase());
+    }
+    if (!targetPackage) {
+      targetPackage = await packageRepo.findByNameOrCategory(parsed.packageType);
+    }
 
     const bookingType = targetPackage?.category?.bookingType ?? "DATE_ONLY";
 
