@@ -259,7 +259,7 @@ export class BookingRepository {
     return prisma.booking.findMany({
       where,
       orderBy: {
-        bookingDate: "desc",
+        createdAt: "desc",
       },
       include: {
         client: true,
