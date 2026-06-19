@@ -45,6 +45,7 @@ async function BookingFormContainer() {
     imageUrl: p.imageUrl,
     imageStoragePath: p.imageStoragePath,
     textColor: p.textColor,
+    buttonColor: p.buttonColor,
   }));
 
   const plainCategories = categories.map((c: any) => ({

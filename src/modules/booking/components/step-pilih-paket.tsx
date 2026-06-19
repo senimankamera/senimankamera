@@ -25,6 +25,7 @@ interface PackageItem {
   imageUrl?: string | null;
   imageStoragePath?: string | null;
   textColor?: string | null;
+  buttonColor?: string | null;
 }
 
 function isHexColorLight(color?: string | null): boolean {
@@ -230,6 +231,24 @@ export function StepPilihPaket({
 
                   const customStyle = isCustomColor ? { color: pkg.textColor! } : undefined;
 
+                  const isCustomButtonColor = pkg.buttonColor && pkg.buttonColor.startsWith("#");
+                  const buttonStyle = isCustomButtonColor 
+                    ? (isSelected 
+                        ? { 
+                            backgroundColor: pkg.buttonColor!, 
+                            color: isHexColorLight(pkg.buttonColor) ? "#000000" : "#ffffff",
+                            border: "1px solid",
+                            borderColor: pkg.buttonColor!
+                          }
+                        : {
+                            backgroundColor: "transparent",
+                            color: pkg.buttonColor!,
+                            border: "1px solid",
+                            borderColor: pkg.buttonColor!
+                          }
+                      )
+                    : undefined;
+
                   return (
                     <div
                       key={pkg.id}
@@ -324,13 +343,16 @@ export function StepPilihPaket({
 
                       <Button
                         type="button"
+                        style={buttonStyle}
                         className={cn(
                           "w-full font-sans text-[10px] uppercase tracking-widest py-4 rounded-none mt-auto cursor-pointer relative z-10",
-                          isSelected
-                            ? "bg-primary text-white"
-                            : isLightText
-                              ? "bg-white text-black hover:bg-neutral-200"
-                              : "bg-transparent text-primary border border-border/40 hover:bg-muted"
+                          !isCustomButtonColor && (
+                            isSelected
+                              ? "bg-primary text-white"
+                              : isLightText
+                                ? "bg-white text-black hover:bg-neutral-200"
+                                : "bg-transparent text-primary border border-border/40 hover:bg-muted"
+                          )
                         )}
                       >
                         {isSelected ? "Paket Terpilih ✓" : "Pilih Paket Ini"}

@@ -57,6 +57,7 @@ export class PackageRepository {
     imageUrl?: string | null;
     imageStoragePath?: string | null;
     textColor?: string;
+    buttonColor?: string;
   }) {
     return prisma.package.create({
       data,
@@ -78,6 +79,7 @@ export class PackageRepository {
       imageUrl?: string | null;
       imageStoragePath?: string | null;
       textColor?: string;
+      buttonColor?: string;
     }
   ) {
     return prisma.package.update({

@@ -25,6 +25,7 @@ interface PackageItem {
   imageUrl?: string | null;
   imageStoragePath?: string | null;
   textColor?: string | null;
+  buttonColor?: string | null;
 }
 
 function isHexColorLight(color?: string | null): boolean {
@@ -184,6 +185,16 @@ export function ServicesSelector({ initialPackages, categories }: ServicesSelect
 
                   const customStyle = isCustomColor ? { color: pkg.textColor! } : undefined;
 
+                  const isCustomButtonColor = pkg.buttonColor && pkg.buttonColor.startsWith("#");
+                  const buttonStyle = isCustomButtonColor 
+                    ? { 
+                        backgroundColor: pkg.buttonColor!, 
+                        color: isHexColorLight(pkg.buttonColor) ? "#000000" : "#ffffff",
+                        border: "1px solid",
+                        borderColor: isHexColorLight(pkg.buttonColor) ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)"
+                      } 
+                    : undefined;
+
                   return (
                     <div
                       key={pkg.id}
@@ -259,11 +270,14 @@ export function ServicesSelector({ initialPackages, categories }: ServicesSelect
                       <Button
                         render={<Link href={`/book?package=${encodeURIComponent(pkg.name)}&categoryId=${encodeURIComponent(pkg.categoryId)}`} />}
                         nativeButton={false}
+                        style={buttonStyle}
                         className={cn(
                           "w-full font-sans text-[10px] md:text-xs uppercase tracking-widest py-4 md:py-5 rounded-none mt-auto cursor-pointer relative z-10",
-                          isLightText
-                            ? "bg-white text-black hover:bg-neutral-200"
-                            : "bg-primary text-white hover:opacity-90"
+                          !isCustomButtonColor && (
+                            isLightText
+                              ? "bg-white text-black hover:bg-neutral-200"
+                              : "bg-primary text-white hover:opacity-90"
+                          )
                         )}
                       >
                         Pesan Sesi {pkg.name}

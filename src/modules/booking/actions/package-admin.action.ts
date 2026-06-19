@@ -25,6 +25,7 @@ export async function createPackageAction(formData: FormData) {
     const description = (formData.get("description") as string) || undefined;
     const sessionDurationStr = formData.get("sessionDuration") as string;
     const textColor = (formData.get("textColor") as string) || "DEFAULT";
+    const buttonColor = (formData.get("buttonColor") as string) || "DEFAULT";
     const file = formData.get("file") as File | null;
 
     if (!name || !categoryId || !priceStr || !featuresRaw) {
@@ -57,6 +58,7 @@ export async function createPackageAction(formData: FormData) {
       description,
       sessionDuration,
       textColor,
+      buttonColor,
       imageUrl,
       imageStoragePath,
     });
@@ -91,6 +93,7 @@ export async function updatePackageAction(formData: FormData) {
     const description = (formData.get("description") as string) || undefined;
     const sessionDurationStr = formData.get("sessionDuration") as string;
     const textColor = formData.get("textColor") as string || "DEFAULT";
+    const buttonColor = formData.get("buttonColor") as string || "DEFAULT";
     const file = formData.get("file") as File | null;
     const removeBg = formData.get("removeBg") === "true";
 
@@ -145,6 +148,7 @@ export async function updatePackageAction(formData: FormData) {
       description,
       sessionDuration,
       textColor,
+      buttonColor,
       imageUrl,
       imageStoragePath,
     });

@@ -50,6 +50,7 @@ interface PackageItem {
   imageUrl?: string | null;
   imageStoragePath?: string | null;
   textColor?: string | null;
+  buttonColor?: string | null;
 }
 
 interface PackageManagerProps {
@@ -79,6 +80,7 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [textColor, setTextColor] = useState("DEFAULT");
+  const [buttonColor, setButtonColor] = useState("DEFAULT");
   const [removeBg, setRemoveBg] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,6 +98,7 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
     setFile(null);
     setPreviewUrl(null);
     setTextColor("DEFAULT");
+    setButtonColor("DEFAULT");
     setRemoveBg(false);
     setError(null);
     
@@ -115,6 +118,7 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
     setFile(null);
     setPreviewUrl(pkg.imageUrl || null);
     setTextColor(pkg.textColor || "DEFAULT");
+    setButtonColor(pkg.buttonColor || "DEFAULT");
     setRemoveBg(false);
     setError(null);
   };
@@ -147,6 +151,7 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
       formData.append("sessionDuration", sessionDurationNum.toString());
     }
     formData.append("textColor", textColor);
+    formData.append("buttonColor", buttonColor);
     if (file) {
       formData.append("file", file);
     }
@@ -373,6 +378,40 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
                 </div>
               </div>
 
+              {/* Button Color Selection */}
+              <div className="space-y-1.5">
+                <label className="uppercase tracking-wider text-secondary font-bold block">Warna Tombol Kartu Paket</label>
+                <div className="flex flex-col gap-2 p-3 border border-border/40 bg-muted/5">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={buttonColor !== "DEFAULT"}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setButtonColor("#000000");
+                        } else {
+                          setButtonColor("DEFAULT");
+                        }
+                      }}
+                      className="h-4 w-4 rounded-none border-border accent-primary cursor-pointer"
+                    />
+                    <span className="text-secondary text-[11px] font-semibold">Gunakan Warna Kustom</span>
+                  </label>
+
+                  {buttonColor !== "DEFAULT" && (
+                    <div className="flex items-center gap-2.5 mt-1.5 animate-[fadeIn_0.2s_ease-out]">
+                      <input
+                        type="color"
+                        value={buttonColor.startsWith("#") ? buttonColor : "#000000"}
+                        onChange={(e) => setButtonColor(e.target.value)}
+                        className="w-8 h-8 p-0 border border-border/50 bg-transparent cursor-pointer rounded-none"
+                      />
+                      <span className="font-mono text-[10px] text-primary uppercase font-bold">{buttonColor}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Background Image Upload */}
               <div className="space-y-1.5">
                 <label className="uppercase tracking-wider text-secondary font-bold block">
@@ -559,24 +598,28 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
                             )}>
                               {pkg.category?.label || "Kategori"}
                             </span>
-                            <div className="flex gap-1.5 items-center">
-                              {pkg.imageUrl && (
-                                <span className="font-sans text-[8px] uppercase tracking-widest text-emerald-800 bg-emerald-100 dark:text-emerald-350 dark:bg-emerald-950/40 px-2 py-0.5 font-bold">
-                                  BG Gambar
-                                </span>
-                              )}
-                              {pkg.textColor && pkg.textColor !== "DEFAULT" && (
-                                <span className="font-sans text-[8px] uppercase tracking-widest text-purple-800 bg-purple-100 dark:text-purple-350 dark:bg-purple-950/40 px-2 py-0.5 font-bold">
-                                  Font: {pkg.textColor.startsWith("#") ? pkg.textColor : (pkg.textColor === "LIGHT" ? "Putih" : "Hitam")}
-                                </span>
-                              )}
-                              {pkg.sessionDuration && (
-                                <span className="font-sans text-[8px] uppercase tracking-widest text-blue-800 bg-blue-100 dark:text-blue-300 dark:bg-blue-950/40 px-2 py-0.5 font-bold">
-                                  {pkg.sessionDuration} Menit
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                             <div className="flex gap-1.5 items-center flex-wrap">
+                               {pkg.imageUrl && (
+                                 <span className="font-sans text-[8px] uppercase tracking-widest text-emerald-800 bg-emerald-100 dark:text-emerald-350 dark:bg-emerald-950/40 px-2 py-0.5 font-bold">
+                                   BG Gambar
+                                 </span>
+                               )}
+                               {pkg.textColor && pkg.textColor !== "DEFAULT" && (
+                                 <span className="font-sans text-[8px] uppercase tracking-widest text-purple-800 bg-purple-100 dark:text-purple-350 dark:bg-purple-950/40 px-2 py-0.5 font-bold">
+                                   Font: {pkg.textColor.startsWith("#") ? pkg.textColor : (pkg.textColor === "LIGHT" ? "Putih" : "Hitam")}
+                                 </span>
+                               )}
+                               {pkg.buttonColor && pkg.buttonColor !== "DEFAULT" && (
+                                 <span className="font-sans text-[8px] uppercase tracking-widest text-pink-800 bg-pink-100 dark:text-pink-350 dark:bg-pink-950/40 px-2 py-0.5 font-bold">
+                                   Tombol: {pkg.buttonColor}
+                                 </span>
+                               )}
+                               {pkg.sessionDuration && (
+                                 <span className="font-sans text-[8px] uppercase tracking-widest text-blue-800 bg-blue-100 dark:text-blue-300 dark:bg-blue-950/40 px-2 py-0.5 font-bold">
+                                   {pkg.sessionDuration} Menit
+                                 </span>
+                               )}
+                             </div></div>
                           
                           <h4 
                             style={customStyle}
