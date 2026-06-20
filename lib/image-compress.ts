@@ -66,3 +66,12 @@ export function compressImage(file: File, maxWidth = 1920, quality = 0.85): Prom
     reader.onerror = () => resolve(file);
   });
 }
+
+export function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+}

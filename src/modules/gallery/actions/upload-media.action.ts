@@ -5,6 +5,8 @@ import { MediaUploadService } from "../services/media-upload.service";
 import { GalleryRepository } from "../repositories/gallery.repository";
 import { revalidatePath } from "next/cache";
 
+import { getFileFromFormData } from "@/lib/image-upload-server";
+
 export async function uploadMediaAction(formData: FormData) {
   try {
     // Auth check
@@ -14,7 +16,7 @@ export async function uploadMediaAction(formData: FormData) {
       throw new Error("Unauthorized");
     }
 
-    const file = formData.get("file") as File;
+    const file = getFileFromFormData(formData, "file");
     if (!file) {
       throw new Error("File tidak ditemukan.");
     }

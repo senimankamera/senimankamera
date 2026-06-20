@@ -42,6 +42,8 @@ export async function deleteGalleryAction(id: number) {
   }
 }
 
+import { getFileFromFormData } from "@/lib/image-upload-server";
+
 export async function updateGalleryAction(formData: FormData) {
   try {
     // Auth check
@@ -74,7 +76,7 @@ export async function updateGalleryAction(formData: FormData) {
     }
 
     let mediaData: any = {};
-    const file = formData.get("file") as File | null;
+    const file = getFileFromFormData(formData, "file");
     
     // Check if file is uploaded and valid
     if (file && file.size > 0 && file.name !== "undefined") {

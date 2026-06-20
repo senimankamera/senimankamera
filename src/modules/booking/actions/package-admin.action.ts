@@ -5,6 +5,7 @@ import { PackageImageUploadService } from "../services/package-image-upload.serv
 import { createClient } from "@/src/infrastructure/supabase/server";
 import { prisma } from "@/src/infrastructure/prisma/client";
 import { revalidatePath } from "next/cache";
+import { getFileFromFormData } from "@/lib/image-upload-server";
 
 export async function createPackageAction(formData: FormData) {
   try {
@@ -26,7 +27,7 @@ export async function createPackageAction(formData: FormData) {
     const sessionDurationStr = formData.get("sessionDuration") as string;
     const textColor = (formData.get("textColor") as string) || "DEFAULT";
     const buttonColor = (formData.get("buttonColor") as string) || "DEFAULT";
-    const file = formData.get("file") as File | null;
+    const file = getFileFromFormData(formData, "file");
 
     if (!name || !categoryId || !priceStr || !featuresRaw) {
       throw new Error("Semua field wajib diisi (Nama, Kategori, Harga, Fitur).");
@@ -94,7 +95,7 @@ export async function updatePackageAction(formData: FormData) {
     const sessionDurationStr = formData.get("sessionDuration") as string;
     const textColor = formData.get("textColor") as string || "DEFAULT";
     const buttonColor = formData.get("buttonColor") as string || "DEFAULT";
-    const file = formData.get("file") as File | null;
+    const file = getFileFromFormData(formData, "file");
     const removeBg = formData.get("removeBg") === "true";
 
     if (!id || !name || !categoryId || !priceStr || !featuresRaw) {

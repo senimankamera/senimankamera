@@ -123,18 +123,23 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
     }
 
     let finalFile = file;
+    let fileToSend: any = file;
     if (file && file.type.startsWith("image/")) {
       try {
-        const { compressImage } = await import("@/lib/image-compress");
+        const { compressImage, fileToBase64 } = await import("@/lib/image-compress");
         finalFile = await compressImage(file);
+        fileToSend = await fileToBase64(finalFile);
       } catch (err) {
         console.error("Error compressing image:", err);
       }
     }
 
     const formData = new FormData();
-    if (finalFile) {
-      formData.append("file", finalFile);
+    if (fileToSend) {
+      formData.append("file", fileToSend);
+      if (finalFile) {
+        formData.append("fileName", finalFile.name);
+      }
     }
     formData.append("title", title);
     formData.append("category", category);

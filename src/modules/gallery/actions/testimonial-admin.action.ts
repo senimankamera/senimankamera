@@ -5,6 +5,8 @@ import { MediaUploadService } from "../services/media-upload.service";
 import { TestimonialRepository } from "../repositories/testimonial.repository";
 import { revalidatePath } from "next/cache";
 
+import { getFileFromFormData } from "@/lib/image-upload-server";
+
 export async function createTestimonialAction(formData: FormData) {
   try {
     // Auth check
@@ -17,7 +19,7 @@ export async function createTestimonialAction(formData: FormData) {
     const name = formData.get("name") as string;
     const role = formData.get("role") as string;
     const content = formData.get("content") as string;
-    const file = formData.get("file") as File | null;
+    const file = getFileFromFormData(formData, "file");
 
     if (!name || !content) {
       throw new Error("Mohon lengkapi semua field yang wajib diisi (Nama dan Testimoni).");
@@ -73,7 +75,7 @@ export async function updateTestimonialAction(formData: FormData) {
     const name = formData.get("name") as string;
     const role = formData.get("role") as string;
     const content = formData.get("content") as string;
-    const file = formData.get("file") as File | null;
+    const file = getFileFromFormData(formData, "file");
 
     if (!name || !content) {
       throw new Error("Mohon lengkapi semua field yang wajib diisi (Nama dan Testimoni).");
