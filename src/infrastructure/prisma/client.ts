@@ -22,8 +22,8 @@ if (process.env.NODE_ENV !== "production") {
 
 const adapter = new PrismaPg(pool);
 
-// Force recreate client if hot reload holds an old client instance without the new category or paymentTransaction models
-if (globalForPrisma.prisma && (!globalForPrisma.prisma.category || !globalForPrisma.prisma.paymentTransaction)) {
+// Force recreate client if hot reload holds an old client instance without the new category, paymentTransaction, or testimonial models
+if (globalForPrisma.prisma && (!globalForPrisma.prisma.category || !globalForPrisma.prisma.paymentTransaction || !globalForPrisma.prisma.testimonial)) {
   globalForPrisma.prisma = undefined;
 }
 

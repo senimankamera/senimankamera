@@ -114,7 +114,7 @@ export function StepDataPemesan({
               <input
                 type="text"
                 id="fullName"
-                placeholder="misal: Eleanor & James"
+                placeholder="misal: Al-Azhar & Istri, Wisuda Najmi, Akad Najmi"
                 value={fullName}
                 onChange={(e) => onChangeFields({ fullName: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 bg-transparent border border-border/40 focus:border-primary focus:outline-none transition-colors rounded-none placeholder:text-secondary/40 text-primary text-xs"
@@ -133,7 +133,7 @@ export function StepDataPemesan({
               <input
                 type="tel"
                 id="phoneNumber"
-                placeholder="misal: 081234567890"
+                placeholder="misal: 083832376353"
                 value={phoneNumber}
                 onChange={(e) => onChangeFields({ phoneNumber: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 bg-transparent border border-border/40 focus:border-primary focus:outline-none transition-colors rounded-none placeholder:text-secondary/40 text-primary text-xs"
@@ -171,7 +171,7 @@ export function StepDataPemesan({
               <input
                 type="text"
                 id="instagram"
-                placeholder="misal: @najmialazhar"
+                placeholder="misal: @najmialazhar_"
                 value={instagram}
                 onChange={(e) => onChangeFields({ instagram: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 bg-transparent border border-border/40 focus:border-primary focus:outline-none transition-colors rounded-none placeholder:text-secondary/40 text-primary text-xs"
@@ -190,7 +190,7 @@ export function StepDataPemesan({
               <input
                 type="text"
                 id="eventName"
-                placeholder="misal: Wedding Eleanor & James"
+                placeholder="misal: Wedding Al-Azhar & Istri"
                 value={eventName}
                 onChange={(e) => onChangeFields({ eventName: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 bg-transparent border border-border/40 focus:border-primary focus:outline-none transition-colors rounded-none placeholder:text-secondary/40 text-primary text-xs"
@@ -229,7 +229,7 @@ export function StepDataPemesan({
             <textarea
               id="notes"
               rows={4}
-              placeholder="Ceritakan detail acara Anda, konsep estetika yang diinginkan, atau request khusus..."
+              placeholder='misal: "A, Datengnya dari 1 jam sebelum acara ya, makan dulu disini biar engga salatri"'
               value={notes}
               onChange={(e) => onChangeFields({ notes: e.target.value })}
               className="w-full pl-10 pr-4 py-3 bg-transparent border border-border/40 focus:border-primary focus:outline-none transition-colors rounded-none placeholder:text-secondary/40 text-primary resize-none text-xs"

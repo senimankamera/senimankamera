@@ -11,7 +11,8 @@ import {
   ClipboardList,
   Tag,
   FileSpreadsheet,
-  FileText
+  FileText,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +39,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
     { name: "Paket", href: "/admin/packages", icon: Settings },
     { name: "Kategori", href: "/admin/categories", icon: Tag },
     { name: "Pengaturan S&K", href: "/admin/settings", icon: FileText },
+    { name: "Testimoni", href: "/admin/testimonials", icon: MessageSquare },
   ];
 
   const handleSignOut = async (e: React.FormEvent) => {

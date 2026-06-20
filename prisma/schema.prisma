@@ -120,5 +120,16 @@ model SiteSettings {
   updatedAt DateTime @updatedAt
 }
 
+model Testimonial {
+  id          String   @id @default(uuid())
+  name        String
+  role        String?  // e.g. "Klien Prewedding", "Pernikahan Destinasi"
+  content     String   @db.Text
+  avatarUrl   String?  // Public URL from Supabase Storage
+  storagePath String?  // Supabase storage path (for deletion)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 
 

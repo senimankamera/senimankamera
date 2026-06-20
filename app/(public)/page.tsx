@@ -1,60 +1,57 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, User } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { prisma } from "@/src/infrastructure/prisma/client";
 import { FeaturedCollections } from "@/src/modules/gallery/components/featured-collections";
-
-// Fallback collections if database is empty
-const fallbackCollections = [
-  {
-    id: -1,
-    title: "Acara Utama",
-    category: "Wedding",
-    subCategory: "01 • Pernikahan",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBCJtimT1j3d4-PVx7xHWgn2DYhN6L8Bl2myAtaFHOb7r7vn_6oyRX2Dez1gfdnPIcn8GEIOPmOElR3_-u67FhZduHFmBuKSElf1OQ5odoJAGRRdZyYWXvHoFpdlVeFVnLxheHsi5VMHQfzSDFVW781DkEVKgRP729VTSrM7rtO7vLv8M5uOkVLWd2TCSOxNtV6k1jBDj5WqpEcGo0GZjW_HHb0fUM-BNd6KQZk0je79bYXiBo8x1IpOxVj63Xk-XbqAmiAOzi5yTDo",
-    aspect: "portrait",
-    description: "Fotografi Pernikahan"
-  },
-  {
-    id: -2,
-    title: "Langkah Awal",
-    category: "Prewedding",
-    subCategory: "02 • Pra-nikah",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuB-dGyIedlUDtzm97T6YxpxDWWpxUE_QtuLSe3hDeKC3kjxRQxur1S3yKKV8Nr4uuVUix1OHq84HAk_oBeqkX2M6bWm-i1VGwXHdkfHKa5EH27HhhlLGNiFq1tDE8iXtAU40WoXAZLQjON19uLRLoa3mCjamhQaFXPoF-1_QdHZl0oQQDHBoD38Zq1cfH8q4U7BkjgM2DnU3iUVnnBDN9zwa4nATgrTBMxY0stb_IztypdpQDNppcSTkfo8JPU7j4z98mJOV1eq8slH",
-    aspect: "portrait",
-    description: "Fotografi Pra-nikah"
-  },
-  {
-    id: -3,
-    title: "Potret Diri",
-    category: "Portraits",
-    subCategory: "03 • Potret",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuC-y2iO_u9R60MaruXR8QMXB5m-9Ti8bH4vdhKqR-Okw-QjmIlfkmTsorBjfjLb5_JTqG7IO_4cECBIGlv7WDyKxH-PnA86mkSpgtKb9J8Jo0w1JjTuPmv50xEbhdiVE2RyqGGIdxWPqCzBAt4oVjlhm7J_1v4PRbbUfIxB-N0jqDaqEXeYRUayHLI04KWGB2Kc2B0hNp1mbvjLPomEdL8u2wXa0baYrXHNkuiAuDs4K3S9j7LKM66MVHl19d-mzptdWlDvAe6kdMIE",
-    aspect: "portrait",
-    description: "Fotografi Potret"
-  }
-];
+import { TestimonialRepository } from "@/src/modules/gallery/repositories/testimonial.repository";
+import { ScrollAnimate } from "@/components/scroll-animate";
 
 export const revalidate = 0;
 
+const fallbackTestimonials = [
+  {
+    id: "default-1",
+    name: "Eleanor & James",
+    role: "Pernikahan Destinasi di Tuscany",
+    content: "Mereka tidak sekadar mengambil foto; mereka mengabadikan rasa yang sesungguhnya dari hari bahagia itu. Setiap foto tampak seperti cuplikan dari film klasik.",
+    avatarUrl: null,
+  },
+  {
+    id: "default-2",
+    name: "Sarah Jenkins",
+    role: "Klien Sesi Potret Editorial",
+    content: "Tingkat profesionalisme dan visi artistik mereka tiada banding. Kami merasa sangat nyaman, dan galeri akhir melampaui ekspektasi terbesar kami.",
+    avatarUrl: null,
+  },
+];
+
 export default async function HomePage() {
   let latestGalleries = [];
+  let testimonials = [];
+
   try {
-    latestGalleries = await prisma.gallery.findMany({
-      where: {
-        mediaType: "image",
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 6,
-    });
+    const testimonialRepo = new TestimonialRepository();
+    const [resGalleries, resTestimonials] = await Promise.all([
+      prisma.gallery.findMany({
+        where: {
+          mediaType: "image",
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 6,
+      }),
+      testimonialRepo.findAll(),
+    ]);
+    latestGalleries = resGalleries;
+    testimonials = resTestimonials;
   } catch (error) {
     console.error("Prisma error during home page generation:", error);
   }
 
-  const displayItems = latestGalleries.length > 0 ? latestGalleries : fallbackCollections;
+  const displayItems = latestGalleries;
+  const displayTestimonials = (testimonials.length > 0 ? testimonials : fallbackTestimonials).slice(0, 6);
 
   return (
     <div className="w-full">
@@ -142,24 +139,92 @@ export default async function HomePage() {
         <FeaturedCollections items={displayItems} />
       </section>
 
-      {/* Call to Action Section */}
-      <section className="py-32 md:py-48 px-6 md:px-20 text-center" id="contact">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="font-serif text-4xl md:text-6xl text-primary mb-8 font-medium">
-            Pesan Karya Seni Anda
-          </h2>
-          <p className="font-sans text-base md:text-lg text-secondary mb-12 font-light leading-relaxed">
-            Kami membatasi jumlah pesanan setiap tahun untuk memastikan kualitas tanpa kompromi dan perhatian khusus kepada setiap klien. Izinkan kami menceritakan kisah Anda.
-          </p>
-          <a
-            href="mailto:hello@senimankamera.com"
-            className={cn(
-              buttonVariants({ size: "lg" }),
-              "font-sans text-xs uppercase tracking-widest px-12 py-7 rounded-none text-center"
-            )}
-          >
-            Tanyakan Ketersediaan
-          </a>
+      {/* Testimonials Section */}
+      <section className="py-24 md:py-32 bg-muted/30">
+        <div className="w-full max-w-[1440px] mx-auto px-6 md:px-20">
+          <div className="text-center max-w-2xl mx-auto mb-20">
+            <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-secondary mb-3 block font-bold">
+              Pengalaman Klien
+            </span>
+            <h2 className="font-serif text-3xl md:text-5xl text-primary font-medium">
+              Kisah & Kesan Mereka
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {displayTestimonials.map((item: any, idx: number) => {
+              const delays = ["delay-[0ms]", "delay-[150ms]", "delay-[300ms]", "delay-[450ms]"];
+              const delayClass = delays[idx % delays.length];
+
+              return (
+                <ScrollAnimate
+                  key={item.id}
+                  delay={delayClass}
+                  initialClass="opacity-0 scale-95 translate-y-8"
+                  animateClass="opacity-100 scale-100 translate-y-0"
+                  className="flex"
+                >
+                  <div className="relative overflow-hidden border border-white/40 bg-card/20 backdrop-blur-sm p-6 md:p-8 flex flex-col justify-between rounded-none w-full hover:border-primary/30 transition-all duration-500 shadow-sm text-center group">
+                    {/* Blurred Profile Photo Background */}
+                    {item.avatarUrl ? (
+                      <div
+                        className="absolute inset-0 z-0 bg-cover bg-center blur-[1px] opacity-45 scale-100 transition-transform duration-1000 group-hover:scale-105 pointer-events-none"
+                        style={{ backgroundImage: `url("${item.avatarUrl}")` }}
+                      />
+                    ) : (
+                      <div className="absolute inset-0 z-0 bg-gradient-to-b from-neutral-100/50 to-transparent opacity-20 dark:from-neutral-800/30 pointer-events-none" />
+                    )}
+
+                    {/* Subtle vignette inner overlay */}
+                    <div className="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-card/5 to-card/50 opacity-40 pointer-events-none" />
+
+                    <div className="w-full relative z-10 flex flex-col justify-between h-full">
+                      {/* Client Info Block - Centered at the top */}
+                      <div className="flex flex-col items-center gap-3 pb-5 border-b border-border/10 mb-5">
+                        <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-100/80 border border-border/40 flex-shrink-0 flex items-center justify-center transition-transform duration-500 group-hover:scale-105 shadow-sm">
+                          {item.avatarUrl ? (
+                            <img
+                              src={item.avatarUrl}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-6 h-6 text-secondary/40" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-serif text-sm font-semibold text-primary">
+                            {item.name}
+                          </h4>
+                          {item.role && (
+                            <p className="text-[10px] text-secondary font-medium tracking-wide mt-0.5">
+                              {item.role}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Content block below inside glassmorphic wrapper */}
+                      <div className="bg-card/85 backdrop-blur-md border border-border/20 p-5 rounded-none shadow-sm text-center">
+                        <p className="font-sans text-xs sm:text-sm text-secondary italic leading-relaxed">
+                          "{item.content}"
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </ScrollAnimate>
+              );
+            })}
+          </div>
+
+          <div className="mt-16 text-center">
+            <Link
+              href="/testimonials"
+              className="inline-block font-sans text-xs uppercase tracking-widest border-b border-primary pb-1 font-bold text-primary hover:opacity-85"
+            >
+              Lihat Semua Testimoni
+            </Link>
+          </div>
         </div>
       </section>
     </div>

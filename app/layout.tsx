@@ -15,7 +15,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Seniman Kamera 4888",
+  title: "Seniman Kamera | PHOTOSHOOT",
   description: "Immersive, editorial-style wedding, prewedding, and event photography in Indonesia.",
   icons: {
     icon: "/favicon.png",

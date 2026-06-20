@@ -25,7 +25,8 @@ export function Header() {
     { name: "Beranda", href: "/" },
     { name: "Portofolio", href: "/portfolio" },
     { name: "Layanan", href: "/services" },
-    { name: "Kontak", href: "/#contact" },
+    { name: "Testimonial", href: "/testimonials" },
+    { name: "Kontak", href: "/contact" },
   ];
 
   const isActive = (href: string) => {
