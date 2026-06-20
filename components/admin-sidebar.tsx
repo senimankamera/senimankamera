@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -38,6 +38,30 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
   const pathname = usePathname();
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [isCmsOpen, setIsCmsOpen] = useState(false);
+
+  // Sync state from localStorage on mount (client-side only)
+  useEffect(() => {
+    const savedSchedule = localStorage.getItem("sidebar_schedule_open");
+    const savedCms = localStorage.getItem("sidebar_cms_open");
+    if (savedSchedule !== null) {
+      setIsScheduleOpen(savedSchedule === "true");
+    }
+    if (savedCms !== null) {
+      setIsCmsOpen(savedCms === "true");
+    }
+  }, []);
+
+  const toggleSchedule = () => {
+    const nextState = !isScheduleOpen;
+    setIsScheduleOpen(nextState);
+    localStorage.setItem("sidebar_schedule_open", String(nextState));
+  };
+
+  const toggleCms = () => {
+    const nextState = !isCmsOpen;
+    setIsCmsOpen(nextState);
+    localStorage.setItem("sidebar_cms_open", String(nextState));
+  };
 
   const scheduleMenuItems = [
     { name: "Ringkasan", href: "/admin", icon: LayoutDashboard },
@@ -79,7 +103,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
         {/* Section 1: Kelola Jadwal & Pesanan */}
         <SidebarGroup className="p-0">
           <SidebarGroupLabel 
-            onClick={() => setIsScheduleOpen(!isScheduleOpen)}
+            onClick={toggleSchedule}
             className="font-sans text-[9px] uppercase tracking-widest text-secondary/60 hover:text-primary transition-colors font-bold mb-2 px-3 flex items-center justify-between cursor-pointer w-full select-none"
           >
             <span>Jadwal & Pesanan</span>
@@ -116,7 +140,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
         {/* Section 2: CMS */}
         <SidebarGroup className="p-0">
           <SidebarGroupLabel 
-            onClick={() => setIsCmsOpen(!isCmsOpen)}
+            onClick={toggleCms}
             className="font-sans text-[9px] uppercase tracking-widest text-secondary/60 hover:text-primary transition-colors font-bold mb-2 px-3 flex items-center justify-between cursor-pointer w-full select-none"
           >
             <span>Manajemen Konten (CMS)</span>
