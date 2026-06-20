@@ -119,9 +119,9 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                     <SidebarMenuButton
                       render={<Link href={item.href} />}
                       isActive={active}
-                      className={`py-6 px-3 flex items-center gap-3 font-sans text-xs uppercase tracking-widest font-bold w-full ${active
-                          ? "text-primary-foreground bg-primary hover:bg-primary/90"
-                          : "text-secondary hover:text-primary transition-colors"
+                      className={`py-6 px-3 flex items-center gap-3 font-sans text-xs uppercase tracking-widest font-bold w-full transition-colors ${active
+                          ? "text-primary-foreground! bg-primary! hover:bg-primary/95! hover:text-primary-foreground!"
+                          : "text-secondary hover:text-primary"
                         }`}
                       tooltip={item.name}
                     >
@@ -156,9 +156,9 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                     <SidebarMenuButton
                       render={<Link href={item.href} />}
                       isActive={active}
-                      className={`py-6 px-3 flex items-center gap-3 font-sans text-xs uppercase tracking-widest font-bold w-full ${active
-                          ? "text-primary-foreground bg-primary hover:bg-primary/90"
-                          : "text-secondary hover:text-primary transition-colors"
+                      className={`py-6 px-3 flex items-center gap-3 font-sans text-xs uppercase tracking-widest font-bold w-full transition-colors ${active
+                          ? "text-primary-foreground! bg-primary! hover:bg-primary/95! hover:text-primary-foreground!"
+                          : "text-secondary hover:text-primary"
                         }`}
                       tooltip={item.name}
                     >
