@@ -4,6 +4,7 @@ import { GalleryRepository } from "../repositories/gallery.repository";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/infrastructure/supabase/server";
 import { MediaUploadService } from "../services/media-upload.service";
+import { getFileFromFormData } from "@/lib/image-upload-server";
 
 export async function createGalleryAction(data: {
   title: string;
@@ -41,8 +42,6 @@ export async function deleteGalleryAction(id: number) {
     return { success: false, error: error instanceof Error ? error.message : "Gagal menghapus galeri." };
   }
 }
-
-import { getFileFromFormData } from "@/lib/image-upload-server";
 
 export async function updateGalleryAction(formData: FormData) {
   try {

@@ -13,11 +13,21 @@ const connectionString = process.env.DATABASE_URL;
 let pool: pg.Pool;
 if (process.env.NODE_ENV !== "production") {
   if (!globalForPrisma.pool) {
-    globalForPrisma.pool = new pg.Pool({ connectionString });
+    globalForPrisma.pool = new pg.Pool({ 
+      connectionString,
+      max: 2, // Limit local pool size to prevent connection exhaustion
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    });
   }
   pool = globalForPrisma.pool;
 } else {
-  pool = new pg.Pool({ connectionString });
+  pool = new pg.Pool({ 
+    connectionString,
+    max: 2, // Limit serverless function pool size in production
+    idleTimeoutMillis: 10000, // Release connections quickly on Vercel
+    connectionTimeoutMillis: 5000,
+  });
 }
 
 const adapter = new PrismaPg(pool);
