@@ -1,92 +1,17 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, User } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { ArrowRight } from "lucide-react";
 import { prisma } from "@/src/infrastructure/prisma/client";
 import { FeaturedCollections } from "@/src/modules/gallery/components/featured-collections";
+import { FeaturedTestimonials } from "@/src/modules/gallery/components/featured-testimonials";
 import { TestimonialRepository } from "@/src/modules/gallery/repositories/testimonial.repository";
-import { ScrollAnimate } from "@/components/scroll-animate";
 
 export const revalidate = 0;
-
-const fallbackTestimonials = [
-  {
-    id: "default-1",
-    name: "Eleanor & James",
-    role: "Pernikahan Destinasi di Tuscany",
-    content: "Mereka tidak sekadar mengambil foto; mereka mengabadikan rasa yang sesungguhnya dari hari bahagia itu. Setiap foto tampak seperti cuplikan dari film klasik.",
-    avatarUrl: null,
-  },
-  {
-    id: "default-2",
-    name: "Sarah Jenkins",
-    role: "Klien Sesi Potret Editorial",
-    content: "Tingkat profesionalisme dan visi artistik mereka tiada banding. Kami merasa sangat nyaman, dan galeri akhir melampaui ekspektasi terbesar kami.",
-    avatarUrl: null,
-  },
-];
-
-const fallbackGalleries = [
-  {
-    id: 1,
-    title: "The Vows",
-    category: "Wedding",
-    subCategory: "Wedding • Editorial",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBSmJaBAe4CdjuoHLvqU-Km175wwOxFHMg9_TRB3KRblnYoPcN9RkgIosSQ8cvM3Oan55Di3kQ8w1vdkDt5VnJ1pW4jb4H7W715r5alSfzDmw7meD52yJHfbmarV5ZQVmLVXiO_GtbigfR5zbmoz4YpI6jV3qYZRtAjcvWbpM5Tnzn8ky7Y5-zBmKx7QIA2yr_EbvqVe5s7LdtfUrs8oQNRn3m3CWX0PPxQejkd5kp_95AIC8Klp4wFLyEDvbP_NZmzOfNfSHNCPSa8",
-    aspect: "portrait",
-    description: "Editorial style wedding photography capturing the emotional highlights of the ceremony."
-  },
-  {
-    id: 2,
-    title: "Quiet Confidence",
-    category: "Portraits",
-    subCategory: "Portraits • Studio",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBW-XqRchG1enZOr4Qh03n5_E--qis2aDq25KpXpkU3Zd2qIp_M9tedgLROIybcCpGGm1uxqusuY0U4f13B34_xCC5sccKW-Y_T-Y64wx1h-vIUpNtZkzLM90caCydnJwb_QTjLNNXOmeWRs-GU0fyGOq2UBmoPI0NHayKXs09j-P_owM1oZmtMSvlZmrv4SC4merv04i44DVwhjXEaWz25smWx18r5RWwkvAoXKhLxJlukBgucipeYa2jMolRg_1Im0j4amksUVYHq",
-    aspect: "square",
-    description: "Studio portraits focused on clean lines, delicate lighting, and authentic expression."
-  },
-  {
-    id: 3,
-    title: "Distance & Light",
-    category: "Prewedding",
-    subCategory: "Prewedding • Architecture",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCPpnyNreOiWxPV-QMHlA2IunDlwNY7K9EdQl_DDOIVOjgc7Dcn4YR_fvqmwS8i-iuf_3EQV3tw5teLBC6_KaO8g7ishq9CYsZHhJX7IpJ5KdBpH_PxT1oSqeRID45CH0EzTHJ3vAry0mtGVaIosUgb_mKl6UZuKVd0STNdXvht4KE1FZC2MpgrlLrF9HzttI36khhLn4rJEPQjOp6kH09RUYl77L37VHNSj4XekvjbYjNNXf4hYBVctYDfxOToNHCd7y-sL2pBRwuf",
-    aspect: "portrait",
-    description: "Prewedding photoshoot matching architecture, framing love in monumental environments."
-  },
-  {
-    id: 4,
-    title: "The Culmination",
-    category: "Graduation",
-    subCategory: "Graduation • Milestone",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuAb3PLE5cmDF39Mx3nozwHjRn4tYH9GiTjNUVKNFNnsP4AcLWNkw1dhA8ItQai_Qz-U2O9uI7XE5ySd-17TlCxI4smgOlM9pzLF-uzIZ3ro4J2DuDv1cqDAcKs-7E4iI9_x3P8kHWsm3WNis2izbtewpDIHZxN8nLKoWoJyLZODbgVaO55B2UPeCegCwJ8-W7W8J-HplWm8yrvnTGY7THIOQ1Jzhqf9LSE6g2d3I-45xOoCG436NPA7N_N6qk5kHyZ6o7sr360FHR2l",
-    aspect: "wide",
-    description: "Capturing the proud milestone of graduation with elegance and dynamic depth."
-  },
-  {
-    id: 5,
-    title: "Curated Moments",
-    category: "Events",
-    subCategory: "Events • Details",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuDFquGuAOotqRrlO56_aAiB3jr7Mk3dlRq82z6eOF1ljJhJmzQE228XxnV2cTPsTnQYwTVYly75qFugn3BXVK93NBLcIqFo_vV2FH4kt8XaBs80maNxL05eZladF_M7f5QBy9oPLXk0Map1vpj50e0tUiOFtfqa4nbtkJn0wOwDUptPBWTH85wOUTJKS14MggUuf-TTsm6txQCwlS2EBE7IG4RrxqTpVEbyS_mOija3hmLZddIBRj6RRKHx_qa40clUTpr4bB9bQbLT",
-    aspect: "portrait",
-    description: "Candid event storytelling highlighting details, atmosphere, and natural flow."
-  },
-  {
-    id: 6,
-    title: "The Details",
-    category: "Wedding",
-    subCategory: "Wedding • B&W",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCJmiGKVwaTThlLyJlJtnj7cW3IyZxWYaNilqLS951xtRawOZASgqaWYlff5l5ejQNUT2DaTwmOs5CcS9qoFY5xK82y1JtUjKnCsNXP1klI1uO7x_3uQJV0xAy1U8-SgLw7mh-125SGm3GpdO4-tGhXo3OwuZqdqrU5lStsdPjjLW4esKIcatkCy3_iaHPz-G2bVX6x7uS4QZTzdRlaVI-m5w4nVEwMeaJuRFzS6C3JIz3qnB-3_Iu0MF4ETw1fRLKsaVrXo4W4ZyPw",
-    aspect: "square",
-    description: "Timeless black and white close-up details that build the story of the wedding day."
-  }
-];
 
 export default async function HomePage() {
   let latestGalleries = [];
   let testimonials = [];
+  let isDbError = false;
 
   try {
     const testimonialRepo = new TestimonialRepository();
@@ -106,10 +31,15 @@ export default async function HomePage() {
     testimonials = resTestimonials;
   } catch (error) {
     console.error("Prisma error during home page generation:", error);
+    isDbError = true;
   }
 
-  const displayItems = latestGalleries.length > 0 ? latestGalleries : fallbackGalleries;
-  const displayTestimonials = (testimonials.length > 0 ? testimonials : fallbackTestimonials).slice(0, 6);
+  if (isDbError || (latestGalleries.length === 0 && testimonials.length === 0)) {
+    return null;
+  }
+
+  const displayItems = latestGalleries;
+  const displayTestimonials = testimonials.slice(0, 6);
 
   return (
     <div className="w-full">
@@ -200,9 +130,9 @@ export default async function HomePage() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-24 md:py-32 bg-muted/30">
-        <div className="w-full max-w-[1440px] mx-auto px-6 md:px-20">
-          <div className="text-center max-w-2xl mx-auto mb-20">
+      <section className="py-24 md:py-32 bg-muted/30 overflow-hidden">
+        <div className="max-w-[1440px] mx-auto px-6 md:px-20 mb-12 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+          <div>
             <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-secondary mb-3 block font-bold">
               Pengalaman Klien
             </span>
@@ -210,84 +140,16 @@ export default async function HomePage() {
               Kisah & Kesan Mereka
             </h2>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {displayTestimonials.map((item: any, idx: number) => {
-              const delays = ["delay-[0ms]", "delay-[150ms]", "delay-[300ms]", "delay-[450ms]"];
-              const delayClass = delays[idx % delays.length];
-
-              return (
-                <ScrollAnimate
-                  key={item.id}
-                  delay={delayClass}
-                  initialClass="opacity-0 scale-95 translate-y-8"
-                  animateClass="opacity-100 scale-100 translate-y-0"
-                  className="flex"
-                >
-                  <div className="relative overflow-hidden border border-white/40 bg-card/20 backdrop-blur-sm p-6 md:p-8 flex flex-col justify-between rounded-none w-full hover:border-primary/30 transition-all duration-500 shadow-sm text-center group">
-                    {/* Blurred Profile Photo Background */}
-                    {item.avatarUrl ? (
-                      <div
-                        className="absolute inset-0 z-0 bg-cover bg-center blur-[1px] opacity-45 scale-100 transition-transform duration-1000 group-hover:scale-105 pointer-events-none"
-                        style={{ backgroundImage: `url("${item.avatarUrl}")` }}
-                      />
-                    ) : (
-                      <div className="absolute inset-0 z-0 bg-gradient-to-b from-neutral-100/50 to-transparent opacity-20 dark:from-neutral-800/30 pointer-events-none" />
-                    )}
-
-                    {/* Subtle vignette inner overlay */}
-                    <div className="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-card/5 to-card/50 opacity-40 pointer-events-none" />
-
-                    <div className="w-full relative z-10 flex flex-col justify-between h-full">
-                      {/* Client Info Block - Centered at the top */}
-                      <div className="flex flex-col items-center gap-3 pb-5 border-b border-border/10 mb-5">
-                        <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-100/80 border border-border/40 flex-shrink-0 flex items-center justify-center transition-transform duration-500 group-hover:scale-105 shadow-sm relative">
-                          {item.avatarUrl ? (
-                            <Image
-                              src={item.avatarUrl}
-                              alt={item.name}
-                              width={56}
-                              height={56}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <User className="w-6 h-6 text-secondary/40" />
-                          )}
-                        </div>
-                        <div>
-                          <h4 className="font-serif text-sm font-semibold text-primary">
-                            {item.name}
-                          </h4>
-                          {item.role && (
-                            <p className="text-[10px] text-secondary font-medium tracking-wide mt-0.5">
-                              {item.role}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Content block below inside glassmorphic wrapper */}
-                      <div className="bg-card/85 backdrop-blur-md border border-border/20 p-5 rounded-none shadow-sm text-center">
-                        <p className="font-sans text-xs sm:text-sm text-secondary italic leading-relaxed">
-                          "{item.content}"
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </ScrollAnimate>
-              );
-            })}
-          </div>
-
-          <div className="mt-16 text-center">
-            <Link
-              href="/testimonials"
-              className="inline-block font-sans text-xs uppercase tracking-widest border-b border-primary pb-1 font-bold text-primary hover:opacity-85"
-            >
-              Lihat Semua Testimoni
-            </Link>
-          </div>
+          <Link
+            href="/testimonials"
+            className="font-sans text-xs uppercase tracking-widest border-b border-primary pb-1 font-bold text-primary hover:opacity-85"
+          >
+            Lihat Semua Testimoni
+          </Link>
         </div>
+
+        {/* Testimonials Slider Row */}
+        <FeaturedTestimonials items={displayTestimonials} />
       </section>
     </div>
   );

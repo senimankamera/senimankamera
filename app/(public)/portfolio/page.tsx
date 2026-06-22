@@ -12,12 +12,14 @@ export default async function PortfolioPage() {
   
   let items = [];
   let categories = [];
+  let isDbError = false;
   try {
     const [resItems, resCategories] = await Promise.all([
       getGalleriesUseCase.execute(),
       categoryRepository.findAll(),
     ]);
     items = resItems;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     categories = resCategories.map((c: any) => ({
       id: c.id,
       name: c.name,
@@ -25,6 +27,11 @@ export default async function PortfolioPage() {
     }));
   } catch (error) {
     console.error("Failed to fetch portfolio galleries and categories:", error);
+    isDbError = true;
+  }
+
+  if (isDbError || items.length === 0) {
+    return null;
   }
 
   return <PortfolioGrid initialItems={items} categories={categories} />;

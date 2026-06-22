@@ -196,6 +196,17 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
     });
   };
 
+  const cancelAndClearBooking = (bookingId: string) => {
+    startTransition(async () => {
+      const response = await cancelPendingBookingAction(bookingId);
+      if (response.success) {
+        setActiveSnapToken("");
+        setActiveSnapUrl("");
+        setCreatedBooking(null);
+      }
+    });
+  };
+
   const handleOpenTermsModal = async () => {
     if (activeSnapToken) {
       handleSubmitBooking();
@@ -241,9 +252,15 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
           },
           onError: function (result: any) {
             setServerError("Pembayaran gagal. Silakan coba kembali.");
+            if (createdBooking?.id) {
+              cancelAndClearBooking(createdBooking.id);
+            }
           },
           onClose: function () {
             setServerError("Pembayaran belum diselesaikan. Anda dapat mencoba kembali dengan mengklik tombol di bawah.");
+            if (createdBooking?.id) {
+              cancelAndClearBooking(createdBooking.id);
+            }
           },
         });
       } else if (activeSnapUrl) {
@@ -309,9 +326,11 @@ export function BookingForm({ initialPackages, categories, bookedDatesInfo }: Bo
             },
             onError: function (result: any) {
               setServerError("Pembayaran gagal. Silakan coba kembali.");
+              cancelAndClearBooking(bookingData.id);
             },
             onClose: function () {
               setServerError("Pembayaran belum diselesaikan. Anda dapat mencoba kembali dengan mengklik tombol di bawah.");
+              cancelAndClearBooking(bookingData.id);
             },
           });
         } else if (snapUrl) {

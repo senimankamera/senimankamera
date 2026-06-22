@@ -3,29 +3,22 @@
 import { useState, useTransition } from "react";
 import { 
   Search, 
-  Calendar, 
-  User, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Clock, 
-  FileText, 
-  Check, 
+  Trash2, 
+  Eye, 
   X, 
-  CalendarDays, 
-  CheckCircle2, 
-  ChevronRight, 
-  AlertCircle,
-  HelpCircle,
-  Eye,
-  Info
+  Clock, 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Calendar, 
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { updateBookingStatusAction } from "@/src/modules/booking/actions/update-booking-status.action";
-import { rescheduleBookingAction } from "@/src/modules/booking/actions/reschedule-booking.action";
+import { deleteBookingAction, deleteMultipleBookingsAction } from "@/src/modules/booking/actions/delete-bookings.action";
 import { useModal } from "@/components/modal-provider";
 import { toast } from "sonner";
 
@@ -60,6 +53,7 @@ interface Booking {
   clientId: string;
   client: Client;
   packageType: string;
+  categoryLabel: string;
   bookingDate: string; // ISO
   eventTime: string | null;
   eventName: string | null;
@@ -83,162 +77,133 @@ function formatRupiah(amount: number): string {
   }).format(amount);
 }
 
-interface BookingsClientProps {
+interface HistoryClientProps {
   initialBookings: Booking[];
-  initialStatusFilter?: string;
+  categoryLabels: string[];
 }
 
-export function BookingsClient({ initialBookings, initialStatusFilter }: BookingsClientProps) {
+export function HistoryClient({ initialBookings, categoryLabels }: HistoryClientProps) {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState(initialStatusFilter || "all");
-  const [monthFilter, setMonthFilter] = useState("all");
-  const [yearFilter, setYearFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
-  const [newDate, setNewDate] = useState("");
-  const [rescheduleTime, setRescheduleTime] = useState("");
+
+  // Bulk delete states
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [confirmInput, setConfirmInput] = useState("");
+
   const [isPending, startTransition] = useTransition();
   const { confirm } = useModal();
 
-  // Extract unique years from booking dates
-  const uniqueYears = Array.from(
-    new Set(
-      bookings.map((b) => new Date(b.bookingDate).getFullYear().toString())
-    )
-  ).sort((a, b) => b.localeCompare(a));
+  // Filtering Logic
+  const filteredBookings = bookings.filter((booking) => {
+    const matchesSearch = 
+      booking.client.fullName.toLowerCase().includes(search.toLowerCase()) ||
+      (booking.eventName && booking.eventName.toLowerCase().includes(search.toLowerCase())) ||
+      (booking.client.phoneNumber && booking.client.phoneNumber.includes(search)) ||
+      (booking.client.instagram && booking.client.instagram.toLowerCase().includes(search.toLowerCase())) ||
+      booking.id.toLowerCase().includes(search.toLowerCase());
 
-  const months = [
-    { value: "1", label: "Januari" },
-    { value: "2", label: "Februari" },
-    { value: "3", label: "Maret" },
-    { value: "4", label: "April" },
-    { value: "5", label: "Mei" },
-    { value: "6", label: "Juni" },
-    { value: "7", label: "Juli" },
-    { value: "8", label: "Agustus" },
-    { value: "9", label: "September" },
-    { value: "10", label: "Oktober" },
-    { value: "11", label: "November" },
-    { value: "12", label: "Desember" },
-  ];
+    const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
+    const matchesCategory = categoryFilter === "all" || booking.categoryLabel === categoryFilter;
 
-  // Filtering Logic & Sort by order date (createdAt) descending
-  const filteredBookings = bookings
-    .filter((booking) => {
-      const bDate = new Date(booking.bookingDate);
-      const bMonth = (bDate.getMonth() + 1).toString();
-      const bYear = bDate.getFullYear().toString();
+    return matchesSearch && matchesStatus && matchesCategory;
+  });
 
-      const matchesSearch = 
-        booking.client.fullName.toLowerCase().includes(search.toLowerCase()) ||
-        (booking.eventName && booking.eventName.toLowerCase().includes(search.toLowerCase())) ||
-        (booking.client.phoneNumber && booking.client.phoneNumber.includes(search)) ||
-        (booking.client.instagram && booking.client.instagram.toLowerCase().includes(search.toLowerCase())) ||
-        booking.id.toLowerCase().includes(search.toLowerCase());
+  // Sort by order date (createdAt) descending
+  const sortedFilteredBookings = [...filteredBookings].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 
-      const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
-      const matchesMonth = monthFilter === "all" || bMonth === monthFilter;
-      const matchesYear = yearFilter === "all" || bYear === yearFilter;
-
-      return matchesSearch && matchesStatus && matchesMonth && matchesYear;
-    })
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-  const handleStatusUpdate = async (id: string, status: string) => {
-    const isConfirmed = await confirm(`Apakah Anda yakin ingin mengubah status booking ini menjadi ${status}?`);
-    if (!isConfirmed) {
-      return;
+  // Checkbox handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const ids = new Set(sortedFilteredBookings.map((b) => b.id));
+      setSelectedIds(ids);
+    } else {
+      setSelectedIds(new Set());
     }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    const newSelected = new Set(selectedIds);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const handleSingleDelete = async (id: string) => {
+    const isConfirmed = await confirm("Apakah Anda yakin ingin menghapus permanen riwayat pesanan ini?");
+    if (!isConfirmed) return;
 
     startTransition(async () => {
-      const res = await updateBookingStatusAction(id, status);
-      if (res.success && res.data) {
-        const isHistoryStatus = res.data.status === "LUNAS" || res.data.status === "REJECTED";
-        if (isHistoryStatus) {
-          setBookings((prev) => prev.filter((b) => b.id !== id));
-          if (selectedBooking?.id === id) {
-            setSelectedBooking(null);
-            setIsDetailOpen(false);
-          }
-        } else {
-          setBookings((prev) =>
-            prev.map((b) => (b.id === id ? { ...b, status: res.data.status } : b))
-          );
-          if (selectedBooking?.id === id) {
-            setSelectedBooking((prev) => (prev ? { ...prev, status: res.data.status } : null));
-          }
+      const res = await deleteBookingAction(id);
+      if (res.success) {
+        setBookings((prev) => prev.filter((b) => b.id !== id));
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        if (selectedBooking?.id === id) {
+          setSelectedBooking(null);
+          setIsDetailOpen(false);
         }
-        toast.success(`Booking berhasil diubah menjadi ${status}`);
+        toast.success("Riwayat pesanan berhasil dihapus.");
       } else {
-        toast.error(res.error || "Gagal memperbarui status booking");
+        toast.error(res.error || "Gagal menghapus riwayat pesanan.");
       }
     });
   };
 
-  const handleReschedule = async (e: React.FormEvent) => {
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) {
+      toast.warning("Silakan pilih setidaknya satu pesanan untuk dihapus.");
+      return;
+    }
+    setConfirmInput("");
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const executeBulkDelete = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBooking || !newDate) return;
+    if (confirmInput !== "Delete Selected") {
+      toast.error("Konfirmasi kata kunci salah.");
+      return;
+    }
 
     startTransition(async () => {
-      const isTimeBased = selectedBooking.sessionStartTime !== null;
-      const res = await rescheduleBookingAction(
-        selectedBooking.id, 
-        newDate, 
-        isTimeBased ? rescheduleTime : undefined
-      );
-      if (res.success && res.data) {
-        setBookings((prev) =>
-          prev.map((b) =>
-            b.id === selectedBooking.id
-              ? { 
-                  ...b, 
-                  bookingDate: res.data.bookingDate,
-                  sessionStartTime: res.data.sessionStartTime,
-                  sessionEndTime: res.data.sessionEndTime,
-                  eventTime: res.data.eventTime
-                }
-              : b
-          )
-        );
-        setIsRescheduleOpen(false);
-        setNewDate("");
-        setRescheduleTime("");
-        toast.success("Reschedule berhasil!");
-        if (selectedBooking) {
-          setSelectedBooking({ 
-            ...selectedBooking, 
-            bookingDate: res.data.bookingDate,
-            sessionStartTime: res.data.sessionStartTime,
-            sessionEndTime: res.data.sessionEndTime,
-            eventTime: res.data.eventTime
-          });
-        }
+      const idsArray = Array.from(selectedIds);
+      const res = await deleteMultipleBookingsAction(idsArray);
+      if (res.success) {
+        setBookings((prev) => prev.filter((b) => !selectedIds.has(b.id)));
+        setSelectedIds(new Set());
+        setIsDeleteConfirmOpen(false);
+        toast.success(`${res.count} riwayat pesanan berhasil dihapus.`);
       } else {
-        toast.error(res.error || "Gagal menjadwal ulang");
+        toast.error(res.error || "Gagal menghapus beberapa riwayat.");
       }
     });
   };
 
   const getStatusBadge = (status: string) => {
     switch (status.toUpperCase()) {
-      case "PENDING":
-      case "PENDINGAPPROVAL":
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Pending</Badge>;
       case "APPROVED":
+      case "MANUALBOOKING":
         return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Approved</Badge>;
       case "REJECTED":
         return <Badge className="bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Rejected</Badge>;
       case "CANCELLED":
         return <Badge className="bg-neutral-100 text-neutral-800 border-neutral-200 dark:bg-neutral-950/20 dark:text-neutral-400 dark:border-neutral-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Cancelled</Badge>;
       case "LUNAS":
-      case "PAID":
-      case "COMPLETED":
         return <Badge className="bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Lunas</Badge>;
-      case "MANUALBOOKING":
-        return <Badge className="bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30 uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">Manual</Badge>;
       default:
         return <Badge className="uppercase text-[9px] tracking-wider py-1 px-2.5 rounded-none font-bold">{status}</Badge>;
     }
@@ -268,9 +233,21 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="font-serif text-3xl md:text-4xl text-primary font-medium">Manajemen Booking</h2>
-          <p className="font-sans text-xs text-secondary font-light mt-1">Kelola dan review semua permohonan tanggal booking client.</p>
+          <h2 className="font-serif text-3xl md:text-4xl text-primary font-medium">Riwayat Pesanan</h2>
+          <p className="font-sans text-xs text-secondary font-light mt-1">
+            Daftar seluruh pesanan yang sudah diselesaikan (Lunas) atau Ditolak (Rejected).
+          </p>
         </div>
+        {selectedIds.size > 0 && (
+          <Button
+            onClick={handleBulkDelete}
+            variant="destructive"
+            className="rounded-none font-sans text-xs uppercase tracking-wider py-5 flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Hapus Terpilih ({selectedIds.size})
+          </Button>
+        )}
       </div>
 
       {/* Filter Card */}
@@ -278,7 +255,7 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
         <CardContent className="p-5 flex flex-col md:flex-row gap-4 items-end">
           {/* Search */}
           <div className="flex-1 w-full space-y-1.5">
-            <label className="text-[10px] uppercase tracking-wider font-bold text-secondary">Cari Booking</label>
+            <label className="text-[10px] uppercase tracking-wider font-bold text-secondary">Cari Riwayat</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary/60" />
               <Input
@@ -290,48 +267,32 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
             </div>
           </div>
 
+          {/* Category Filter */}
+          <div className="w-full md:w-[200px] space-y-1.5">
+            <label className="text-[10px] uppercase tracking-wider font-bold text-secondary">Kategori Paket</label>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full border border-border/40 px-3 py-2.5 text-xs bg-background text-foreground focus:outline-none cursor-pointer"
+            >
+              <option value="all">Semua Kategori</option>
+              {categoryLabels.map((label) => (
+                <option key={label} value={label}>{label}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Status Filter */}
-          <div className="w-full md:w-[160px] space-y-1.5">
+          <div className="w-full md:w-[180px] space-y-1.5">
             <label className="text-[10px] uppercase tracking-wider font-bold text-secondary">Status</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full border border-border/40 px-3 py-2.5 text-xs bg-background text-foreground focus:outline-none cursor-pointer"
             >
-              <option value="all">Semua Status</option>
-              <option value="PENDING">Pending Approval</option>
-              <option value="APPROVED">Approved / Accepted</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
-          </div>
-
-          {/* Month Filter */}
-          <div className="w-full md:w-[150px] space-y-1.5">
-            <label className="text-[10px] uppercase tracking-wider font-bold text-secondary">Bulan</label>
-            <select
-              value={monthFilter}
-              onChange={(e) => setMonthFilter(e.target.value)}
-              className="w-full border border-border/40 px-3 py-2.5 text-xs bg-background text-foreground focus:outline-none cursor-pointer"
-            >
-              <option value="all">Semua Bulan</option>
-              {months.map((m) => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Year Filter */}
-          <div className="w-full md:w-[120px] space-y-1.5">
-            <label className="text-[10px] uppercase tracking-wider font-bold text-secondary">Tahun</label>
-            <select
-              value={yearFilter}
-              onChange={(e) => setYearFilter(e.target.value)}
-              className="w-full border border-border/40 px-3 py-2.5 text-xs bg-background text-foreground focus:outline-none cursor-pointer"
-            >
-              <option value="all">Semua Tahun</option>
-              {uniqueYears.map((y) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
+              <option value="all">Semua Riwayat</option>
+              <option value="LUNAS">Lunas</option>
+              <option value="REJECTED">Rejected / Ditolak</option>
             </select>
           </div>
         </CardContent>
@@ -343,25 +304,42 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border bg-neutral-50 dark:bg-neutral-900 font-sans text-[10px] uppercase tracking-widest text-secondary font-bold">
+                <th className="py-4 px-6 w-[50px] text-center">
+                  <input
+                    type="checkbox"
+                    checked={sortedFilteredBookings.length > 0 && selectedIds.size === sortedFilteredBookings.length}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="w-4.5 h-4.5 accent-primary cursor-pointer align-middle"
+                  />
+                </th>
                 <th className="py-4 px-6">ID</th>
                 <th className="py-4 px-6">Pemesan</th>
                 <th className="py-4 px-6">Detail Acara</th>
+                <th className="py-4 px-6">Kategori</th>
                 <th className="py-4 px-6">Jadwal</th>
-                <th className="py-4 px-6">Pembayaran</th>
+                <th className="py-4 px-6">Total Bayar</th>
                 <th className="py-4 px-6">Status</th>
                 <th className="py-4 px-6 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/20 font-sans text-xs">
-              {filteredBookings.length === 0 ? (
+              {sortedFilteredBookings.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-secondary/60 italic">
-                    Tidak ada data booking yang sesuai dengan kriteria filter.
+                  <td colSpan={9} className="py-12 text-center text-secondary/60 italic">
+                    Tidak ada riwayat pesanan yang sesuai dengan kriteria filter.
                   </td>
                 </tr>
               ) : (
-                filteredBookings.map((booking) => (
+                sortedFilteredBookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-muted/10 transition-colors">
+                    <td className="py-5 px-6 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(booking.id)}
+                        onChange={(e) => handleSelectRow(booking.id, e.target.checked)}
+                        className="w-4.5 h-4.5 accent-primary cursor-pointer align-middle"
+                      />
+                    </td>
                     <td className="py-5 px-6 font-mono text-[10px] text-secondary">
                       #{booking.id.substring(0, 8)}
                     </td>
@@ -380,6 +358,9 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
                       <div className="text-[10px] text-secondary uppercase tracking-wider mt-0.5">{booking.packageType}</div>
                     </td>
                     <td className="py-5 px-6">
+                      <span className="font-semibold text-primary">{booking.categoryLabel}</span>
+                    </td>
+                    <td className="py-5 px-6">
                       <div className="font-semibold text-primary">{formatDate(booking.bookingDate)}</div>
                       {booking.sessionStartTime ? (
                         <div className="text-[10px] text-secondary flex items-center gap-1 mt-0.5">
@@ -391,20 +372,8 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
                         </div>
                       ) : null}
                     </td>
-                    <td className="py-5 px-6">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-emerald-600 dark:text-emerald-500">
-                            DP: {formatRupiah(booking.dpAmount ?? 0)}
-                          </span>
-                          <span className={`text-[9px] uppercase px-1.5 py-0.5 font-semibold font-mono tracking-wider border rounded-none scale-95 origin-left ${booking.sessionStartTime ? 'border-amber-200 text-amber-700 bg-amber-50 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30' : 'border-blue-200 text-blue-700 bg-blue-50 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30'}`}>
-                            {booking.sessionStartTime ? "Time" : "Date"}
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-secondary font-medium">
-                          Sisa: {formatRupiah((booking.totalAmount ?? 0) - (booking.dpAmount ?? 0))}
-                        </div>
-                      </div>
+                    <td className="py-5 px-6 font-semibold text-emerald-600 dark:text-emerald-500">
+                      {formatRupiah(booking.totalAmount ?? 0)}
                     </td>
                     <td className="py-5 px-6">
                       {getStatusBadge(booking.status)}
@@ -422,66 +391,15 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-
-                      {booking.status === "PENDING" && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleStatusUpdate(booking.id, "APPROVED")}
-                            className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-100"
-                            title="Setujui Booking"
-                          >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleStatusUpdate(booking.id, "REJECTED")}
-                            className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-100"
-                            title="Tolak Booking"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </>
-                      )}
-
-                      {booking.status === "APPROVED" && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleStatusUpdate(booking.id, "LUNAS")}
-                            className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-100"
-                            title="Tandai Lunas"
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleStatusUpdate(booking.id, "CANCELLED")}
-                            className="h-8 w-8 text-neutral-500 hover:text-neutral-600 hover:bg-neutral-50 border-neutral-200"
-                            title="Batalkan Booking"
-                          >
-                            <AlertCircle className="w-4 h-4" />
-                          </Button>
-                        </>
-                      )}
-
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
-                        onClick={() => {
-                          setSelectedBooking(booking);
-                          setIsRescheduleOpen(true);
-                          setNewDate(new Date(booking.bookingDate).toISOString().split("T")[0]);
-                          setRescheduleTime(booking.sessionStartTime || "");
-                        }}
-                        className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-100"
-                        title="Reschedule"
+                        onClick={() => handleSingleDelete(booking.id)}
+                        disabled={isPending}
+                        className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                        title="Hapus Permanen"
                       >
-                        <CalendarDays className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </td>
                   </tr>
@@ -492,13 +410,13 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
         </div>
       </Card>
 
-      {/* DETAIL MODAL (SIDE SHEET DIALOG INTERAKTIF) */}
+      {/* DETAIL MODAL */}
       {isDetailOpen && selectedBooking && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/50 backdrop-blur-sm">
           <div className="bg-background w-full max-w-lg h-full p-8 overflow-y-auto flex flex-col space-y-6 shadow-2xl animate-in slide-in-from-right duration-300 rounded-none border-l border-border/40">
             <div className="flex items-center justify-between border-b border-border/20 pb-4">
               <div>
-                <h3 className="font-serif text-xl text-primary font-medium">Detail Booking</h3>
+                <h3 className="font-serif text-xl text-primary font-medium">Detail Riwayat</h3>
                 <span className="font-mono text-[10px] text-secondary">#{selectedBooking.id}</span>
               </div>
               <Button
@@ -514,7 +432,7 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
             <div className="space-y-6 flex-1">
               {/* Status Section */}
               <div className="flex justify-between items-center bg-muted/20 p-4 border border-border/30">
-                <span className="font-sans text-[10px] uppercase tracking-wider font-bold text-secondary">Status Sekarang</span>
+                <span className="font-sans text-[10px] uppercase tracking-wider font-bold text-secondary">Status</span>
                 <div>{getStatusBadge(selectedBooking.status)}</div>
               </div>
 
@@ -575,16 +493,16 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
               {/* Paket & Jadwal */}
               <div className="space-y-3">
                 <h4 className="font-serif text-xs uppercase tracking-widest text-primary font-semibold border-b border-border/10 pb-1.5">
-                  Jadwal & Paket Sesi
+                  Jadwal & Kategori
                 </h4>
                 <div className="grid grid-cols-2 gap-4 font-sans text-xs">
                   <div>
-                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Paket Layanan</span>
-                    <span className="text-primary font-bold">{selectedBooking.packageType}</span>
+                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Kategori</span>
+                    <span className="text-primary font-bold">{selectedBooking.categoryLabel}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Sumber Pesanan</span>
-                    <span className="text-primary capitalize">{selectedBooking.source}</span>
+                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Paket Layanan</span>
+                    <span className="text-primary font-bold">{selectedBooking.packageType}</span>
                   </div>
                   <div className="col-span-2">
                     <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Waktu Rencana</span>
@@ -619,138 +537,82 @@ export function BookingsClient({ initialBookings, initialStatusFilter }: Booking
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Harga Paket</span>
+                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Harga Total</span>
                     <span className="text-primary font-bold">{formatRupiah(selectedBooking.totalAmount ?? 0)}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Down Payment (DP)</span>
+                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">DP yang Dibayar</span>
                     <span className="text-emerald-600 dark:text-emerald-500 font-bold">{formatRupiah(selectedBooking.dpAmount ?? 0)}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Sisa Pelunasan</span>
+                    <span className="text-[10px] text-secondary font-semibold uppercase tracking-wider block mb-0.5">Pelunasan</span>
                     <span className="text-blue-600 dark:text-blue-500 font-bold">{formatRupiah((selectedBooking.totalAmount ?? 0) - (selectedBooking.dpAmount ?? 0))}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Actions Panel */}
-            <div className="border-t border-border/20 pt-6 flex flex-wrap gap-2 justify-end">
-              {selectedBooking.status === "PENDING" && (
-                <>
-                  <Button
-                    onClick={() => handleStatusUpdate(selectedBooking.id, "APPROVED")}
-                    disabled={isPending}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-none font-sans text-xs uppercase tracking-wider py-5"
-                  >
-                    Setujui
-                  </Button>
-                  <Button
-                    onClick={() => handleStatusUpdate(selectedBooking.id, "REJECTED")}
-                    disabled={isPending}
-                    variant="outline"
-                    className="border-rose-200 text-rose-600 hover:bg-rose-50 rounded-none font-sans text-xs uppercase tracking-wider py-5"
-                  >
-                    Tolak
-                  </Button>
-                </>
-              )}
-
-              {selectedBooking.status === "APPROVED" && (
-                <>
-                  <Button
-                    onClick={() => handleStatusUpdate(selectedBooking.id, "LUNAS")}
-                    disabled={isPending}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-none font-sans text-xs uppercase tracking-wider py-5"
-                  >
-                    Tandai Lunas
-                  </Button>
-                  <Button
-                    onClick={() => handleStatusUpdate(selectedBooking.id, "CANCELLED")}
-                    disabled={isPending}
-                    variant="outline"
-                    className="border-neutral-200 text-neutral-600 hover:bg-neutral-50 rounded-none font-sans text-xs uppercase tracking-wider py-5"
-                  >
-                    Batalkan
-                  </Button>
-                </>
-              )}
-
+            <div className="border-t border-border/20 pt-6 flex justify-end">
               <Button
-                onClick={() => {
-                  setIsDetailOpen(false);
-                  setIsRescheduleOpen(true);
-                  setNewDate(new Date(selectedBooking.bookingDate).toISOString().split("T")[0]);
-                  setRescheduleTime(selectedBooking.sessionStartTime || "");
-                }}
-                variant="outline"
-                className="rounded-none border-border font-sans text-xs uppercase tracking-wider py-5"
+                onClick={() => handleSingleDelete(selectedBooking.id)}
+                disabled={isPending}
+                variant="destructive"
+                className="rounded-none font-sans text-xs uppercase tracking-wider py-5"
               >
-                Reschedule
+                Hapus Permanen
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* RESCHEDULE DIALOG */}
-      {isRescheduleOpen && selectedBooking && (
+      {/* BULK DELETE CONFIRMATION DIALOG */}
+      {isDeleteConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <Card className="w-full max-w-md rounded-none border-border/40 shadow-2xl bg-background text-foreground animate-in zoom-in-95 duration-200">
             <CardHeader className="border-b border-border/20 pb-4">
-              <CardTitle className="font-serif text-lg text-primary font-medium">Reschedule Jadwal</CardTitle>
-              <CardDescription className="font-sans text-xs">Pindahkan tanggal booking untuk client {selectedBooking.client.fullName}</CardDescription>
+              <CardTitle className="font-serif text-lg text-red-600 font-medium flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                Hapus Masal Riwayat Pesanan
+              </CardTitle>
+              <CardDescription className="font-sans text-xs">
+                Tindakan ini akan menghapus secara permanen {selectedIds.size} riwayat pesanan terpilih. Data tidak dapat dipulihkan!
+              </CardDescription>
             </CardHeader>
-            <form onSubmit={handleReschedule}>
+            <form onSubmit={executeBulkDelete}>
               <CardContent className="py-6 space-y-4">
-                <div className="space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-secondary tracking-wider block">Tanggal Lama</span>
-                  <div className="text-xs text-primary font-medium">{formatDate(selectedBooking.bookingDate)}</div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="rescheduleDate" className="text-[10px] uppercase font-bold text-secondary tracking-wider block">Tanggal Baru</label>
+                <div className="space-y-2">
+                  <label htmlFor="deleteConfirmInput" className="text-xs font-semibold text-secondary">
+                    Ketik <span className="font-bold text-red-600">Delete Selected</span> untuk mengonfirmasi tindakan ini:
+                  </label>
                   <Input
-                    type="date"
-                    id="rescheduleDate"
-                    value={newDate}
-                    onChange={(e) => setNewDate(e.target.value)}
+                    type="text"
+                    id="deleteConfirmInput"
+                    placeholder='Ketik "Delete Selected" disini'
+                    value={confirmInput}
+                    onChange={(e) => setConfirmInput(e.target.value)}
                     required
                     className="rounded-none border-border/40 text-xs py-5"
+                    autoComplete="off"
                   />
-                  {selectedBooking.sessionStartTime !== null && (
-                    <div className="space-y-1.5 mt-4">
-                      <label htmlFor="rescheduleTime" className="text-[10px] uppercase font-bold text-secondary tracking-wider block">Jam Sesi Baru</label>
-                      <Input
-                        type="time"
-                        id="rescheduleTime"
-                        value={rescheduleTime}
-                        onChange={(e) => setRescheduleTime(e.target.value)}
-                        required
-                        className="rounded-none border-border/40 text-xs py-5"
-                      />
-                    </div>
-                  )}
-                  <p className="text-[10px] text-secondary/70 italic flex items-center gap-1 mt-1">
-                    <Info className="w-3.5 h-3.5" /> Tanggal baru akan dikunci dan tanggal lama akan dibebaskan kembali.
-                  </p>
                 </div>
               </CardContent>
               <div className="border-t border-border/20 px-6 py-4 flex justify-end gap-2 bg-neutral-50 dark:bg-neutral-900">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsRescheduleOpen(false)}
+                  onClick={() => setIsDeleteConfirmOpen(false)}
                   className="rounded-none border-border font-sans text-xs uppercase tracking-wider py-4"
                 >
                   Batal
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isPending || !newDate}
+                  disabled={isPending || confirmInput !== "Delete Selected"}
+                  variant="destructive"
                   className="rounded-none font-sans text-xs uppercase tracking-wider py-4"
                 >
-                  {isPending ? "Memproses..." : "Reschedule"}
+                  {isPending ? "Menghapus..." : "Hapus Permanen"}
                 </Button>
               </div>
             </form>

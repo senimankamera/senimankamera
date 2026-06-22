@@ -14,6 +14,7 @@ async function BookingFormContainer() {
   let packages = [];
   let bookedDatesInfo = [];
   let categories = [];
+  let isDbError = false;
   try {
     const [resPackages, resBookedDatesInfo, resCategories] = await Promise.all([
       packageRepository.findAll(),
@@ -25,8 +26,14 @@ async function BookingFormContainer() {
     categories = resCategories;
   } catch (error) {
     console.error("Failed to fetch booking form data:", error);
+    isDbError = true;
   }
 
+  if (isDbError || packages.length === 0) {
+    return null;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const plainPackages = packages.map((p: any) => ({
     id: p.id,
     name: p.name,
@@ -48,6 +55,7 @@ async function BookingFormContainer() {
     buttonColor: p.buttonColor,
   }));
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const plainCategories = categories.map((c: any) => ({
     id: c.id,
     name: c.name,

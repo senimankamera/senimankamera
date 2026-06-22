@@ -239,6 +239,10 @@ export class BookingRepository {
 
     if (filters.status) {
       where.status = filters.status;
+    } else {
+      where.status = {
+        notIn: ["LUNAS", "REJECTED"],
+      };
     }
 
     if (filters.year !== undefined || filters.month !== undefined) {
@@ -482,12 +486,147 @@ export class BookingRepository {
     return bookings;
   }
 
+  private async cleanupOrphanedTimeBasedSlots(bookingDates: Date[], tx: any = prisma) {
+    for (const date of bookingDates) {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const activeBookingsCount = await tx.booking.count({
+        where: {
+          bookingDate: {
+            gte: startOfDay,
+            lte: endOfDay,
+          },
+          status: {
+            in: ["PENDING", "APPROVED", "LUNAS", "ManualBooking"],
+          },
+          sessionStartTime: {
+            not: null,
+          },
+        },
+      });
+
+      if (activeBookingsCount === 0) {
+        await tx.calendarSlot.deleteMany({
+          where: {
+            date: {
+              gte: startOfDay,
+              lte: endOfDay,
+            },
+            status: "TIME_BASED_ACTIVE",
+          },
+        });
+      }
+    }
+  }
+
   async deletePendingBooking(id: string) {
-    return prisma.booking.deleteMany({
+    return prisma.$transaction(async (tx: any) => {
+      const booking = await tx.booking.findUnique({
+        where: { id },
+        select: {
+          bookingDate: true,
+          sessionStartTime: true,
+        },
+      });
+
+      if (!booking) return { count: 0 };
+
+      const result = await tx.booking.deleteMany({
+        where: {
+          id,
+          status: "PENDING",
+        },
+      });
+
+      if (booking.sessionStartTime) {
+        await this.cleanupOrphanedTimeBasedSlots([booking.bookingDate], tx);
+      }
+
+      return result;
+    });
+  }
+
+  async findHistoryBookings() {
+    return prisma.booking.findMany({
       where: {
-        id,
-        status: "PENDING",
+        status: {
+          in: ["LUNAS", "REJECTED"],
+        },
       },
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        client: true,
+      },
+    });
+  }
+
+  async deleteBooking(id: string) {
+    return prisma.$transaction(async (tx: any) => {
+      const booking = await tx.booking.findUnique({
+        where: { id },
+        select: {
+          bookingDate: true,
+          sessionStartTime: true,
+        },
+      });
+
+      if (!booking) {
+        throw new Error("Booking tidak ditemukan.");
+      }
+
+      const result = await tx.booking.delete({
+        where: { id },
+      });
+
+      if (booking.sessionStartTime) {
+        await this.cleanupOrphanedTimeBasedSlots([booking.bookingDate], tx);
+      }
+
+      return result;
+    });
+  }
+
+  async deleteMultipleBookings(ids: string[]) {
+    return prisma.$transaction(async (tx: any) => {
+      const bookings = await tx.booking.findMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+        select: {
+          bookingDate: true,
+          sessionStartTime: true,
+        },
+      });
+
+      const result = await tx.booking.deleteMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+      });
+
+      const timeBasedDates = bookings
+        .filter((b: any) => b.sessionStartTime)
+        .map((b: any) => b.bookingDate);
+
+      if (timeBasedDates.length > 0) {
+        const uniqueDates = Array.from(
+          new Set(timeBasedDates.map((d: any) => d.toISOString()))
+        ).map((iso) => new Date(iso as string));
+
+        await this.cleanupOrphanedTimeBasedSlots(uniqueDates, tx);
+      }
+
+      return result;
     });
   }
 }

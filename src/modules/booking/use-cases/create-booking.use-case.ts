@@ -139,7 +139,8 @@ export class CreateBookingUseCase {
         baseUrl,
       });
     } catch (err) {
-      console.error("Failed to create Midtrans Snap transaction, using fallback:", err);
+      console.error("Failed to create Midtrans Snap transaction:", err);
+      throw new Error("Gagal terhubung ke sistem pembayaran Midtrans. Silakan coba lagi.");
     }
 
     const data: CreateBookingInput = {

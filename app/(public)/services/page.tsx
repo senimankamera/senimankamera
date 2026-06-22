@@ -13,6 +13,7 @@ export default async function ServicesPage() {
 
   let packages = [];
   let categories = [];
+  let isDbError = false;
   try {
     const [resPackages, resCategories] = await Promise.all([
       getPackagesUseCase.execute(),
@@ -22,6 +23,11 @@ export default async function ServicesPage() {
     categories = resCategories;
   } catch (error) {
     console.error("Failed to fetch packages and categories:", error);
+    isDbError = true;
+  }
+
+  if (isDbError || packages.length === 0) {
+    return null;
   }
 
   const serializedPackages = JSON.parse(JSON.stringify(packages));

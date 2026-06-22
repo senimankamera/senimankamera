@@ -3,6 +3,7 @@ import Image from "next/image";
 import { TestimonialRepository } from "@/src/modules/gallery/repositories/testimonial.repository";
 import { ScrollAnimate } from "@/components/scroll-animate";
 import type { Metadata } from "next";
+import { Testimonial } from "@prisma/client";
 
 export const revalidate = 0; // Disable static cache to reflect database changes dynamically
 
@@ -11,41 +12,23 @@ export const metadata: Metadata = {
   description: "Cerita dan testimoni kepuasan dari klien yang telah mempercayakan momen berharga mereka kepada Seniman Kamera.",
 };
 
-const fallbackTestimonials = [
-  {
-    id: "default-1",
-    name: "Eleanor & James",
-    role: "Pernikahan Destinasi di Tuscany",
-    content: "Mereka tidak sekadar mengambil foto; mereka mengabadikan rasa yang sesungguhnya dari hari bahagia itu. Setiap foto tampak seperti cuplikan dari film klasik.",
-    avatarUrl: null,
-  },
-  {
-    id: "default-2",
-    name: "Sarah Jenkins",
-    role: "Klien Sesi Potret Editorial",
-    content: "Tingkat profesionalisme dan visi artistik mereka tiada banding. Kami merasa sangat nyaman, dan galeri akhir melampaui ekspektasi terbesar kami.",
-    avatarUrl: null,
-  },
-  {
-    id: "default-3",
-    name: "Michael Chen",
-    role: "Klien Dokumentasi Event Jakarta",
-    content: "Sangat puas dengan hasilnya! Dokumentasinya sangat detail dan mampu menceritakan kembali suasana acara dengan luar biasa.",
-    avatarUrl: null,
-  },
-];
-
 export default async function TestimonialsPage() {
-  let testimonials = [];
+  let testimonials: Testimonial[] = [];
+  let isDbError = false;
   
   try {
     const testimonialRepo = new TestimonialRepository();
     testimonials = await testimonialRepo.findAll();
   } catch (error) {
     console.error("Failed to fetch testimonials:", error);
+    isDbError = true;
   }
 
-  const displayTestimonials = testimonials.length > 0 ? testimonials : fallbackTestimonials;
+  if (isDbError || testimonials.length === 0) {
+    return null;
+  }
+
+  const displayTestimonials = testimonials;
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-6 md:px-20 py-12 md:py-20">
@@ -64,7 +47,7 @@ export default async function TestimonialsPage() {
 
       {/* Grid Layout (Matching Portfolio structural feel) */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {displayTestimonials.map((item: any, idx: number) => {
+        {displayTestimonials.map((item, idx: number) => {
           const delays = ["delay-[0ms]", "delay-[150ms]", "delay-[300ms]", "delay-[450ms]"];
           const delayClass = delays[idx % delays.length];
 
@@ -121,7 +104,7 @@ export default async function TestimonialsPage() {
                   {/* Content block below inside glassmorphic wrapper */}
                   <div className="bg-card/85 backdrop-blur-md border border-border/20 p-5 rounded-none shadow-sm text-center">
                     <p className="font-sans text-xs sm:text-sm text-secondary italic leading-relaxed">
-                      "{item.content}"
+                      &quot;{item.content}&quot;
                     </p>
                   </div>
                 </div>

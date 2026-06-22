@@ -15,7 +15,8 @@ import {
   FileSpreadsheet,
   FileText,
   MessageSquare,
-  ChevronDown
+  ChevronDown,
+  History
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,11 +34,13 @@ import {
 } from "@/components/ui/sidebar";
 import { logoutAction } from "@/src/modules/auth/actions/login.action";
 import { SessionTimeout } from "@/components/session-timeout";
+import { useModal } from "@/components/modal-provider";
 
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [isCmsOpen, setIsCmsOpen] = useState(false);
+  const { confirm } = useModal();
 
   // Sync state from localStorage on mount (client-side only)
   useEffect(() => {
@@ -66,6 +69,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
   const scheduleMenuItems = [
     { name: "Ringkasan", href: "/admin", icon: LayoutDashboard },
     { name: "Booking", href: "/admin/bookings", icon: ClipboardList },
+    { name: "Riwayat", href: "/admin/history", icon: History },
     { name: "Kalender", href: "/admin/calendar", icon: Calendar },
     { name: "Rekap", href: "/admin/recap", icon: FileSpreadsheet },
   ];
@@ -80,7 +84,10 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
 
   const handleSignOut = async (e: React.FormEvent) => {
     e.preventDefault();
-    await logoutAction();
+    const isConfirmed = await confirm("Apakah Anda yakin ingin keluar?");
+    if (isConfirmed) {
+      await logoutAction();
+    }
   };
 
   return (
