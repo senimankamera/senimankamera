@@ -86,6 +86,7 @@ interface Package {
   id: string;
   name: string;
   price: number;
+  categoryName?: string;
 }
 
 interface CalendarStats {
@@ -1175,7 +1176,9 @@ export function CalendarClient({ initialSlots, timeBasedBookings, packages, stat
                       className="w-full border border-border/40 px-3 py-2 text-xs bg-background text-foreground focus:outline-none cursor-pointer"
                     >
                       {packages.map((pkg) => (
-                        <option key={pkg.id} value={pkg.name}>{pkg.name}</option>
+                        <option key={pkg.id} value={pkg.name}>
+                          {pkg.name} {pkg.categoryName ? `(${pkg.categoryName})` : ""}
+                        </option>
                       ))}
                     </select>
                   </div>

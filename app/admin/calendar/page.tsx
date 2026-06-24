@@ -107,6 +107,7 @@ export default async function AdminCalendarPage() {
     id: p.id,
     name: p.name,
     price: p.price,
+    categoryName: p.category?.name || "",
   }));
 
   return (
