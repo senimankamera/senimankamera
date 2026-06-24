@@ -70,7 +70,7 @@ export class CreateManualBookingUseCase {
     }
 
     const totalAmount = targetPackage?.price || 0;
-    const dpAmount = bookingType === "TIME_BASED" ? 150000 : totalAmount * 0.5;
+    const dpAmount = bookingType === "TIME_BASED" ? 150000 : totalAmount * 0.2;
 
     const crypto = require("crypto");
     const manualOrderId = `manual-${crypto.randomUUID().substring(0, 8)}`;

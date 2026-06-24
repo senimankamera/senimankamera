@@ -1205,7 +1205,7 @@ export function CalendarClient({ initialSlots, timeBasedBookings, packages, stat
                         <span>Down Payment (DP):</span>
                         <span>
                           {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(
-                            selectedPkg.bookingType === "TIME_BASED" ? 150000 : selectedPkg.price * 0.5
+                            selectedPkg.bookingType === "TIME_BASED" ? 150000 : selectedPkg.price * 0.2
                           )}
                         </span>
                       </div>
