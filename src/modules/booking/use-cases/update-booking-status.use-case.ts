@@ -106,8 +106,8 @@ export class UpdateBookingStatusUseCase {
       });
     }
 
-    // Send Telegram Notification for APPROVED, REJECTED, or LUNAS
-    if (status === "APPROVED" || status === "REJECTED" || status === "LUNAS") {
+    // Send Telegram Notification for APPROVED or LUNAS
+    if (status === "APPROVED" || status === "LUNAS") {
       const telegramService = new TelegramService();
       await telegramService.sendBookingStatusNotification(
         booking.client.fullName,
