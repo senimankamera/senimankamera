@@ -213,40 +213,6 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
           </SidebarGroup>
         )}
       </SidebarContent>
-
-      {/* Sidebar Footer Actions */}
-      <SidebarFooter className="border-t border-border/40 py-6 px-4 group-data-[state=collapsed]:px-2 gap-4 mt-auto transition-all duration-300">
-        {adminProfile && (
-          <div className="px-2 py-2 flex items-center gap-3 overflow-hidden justify-start group-data-[state=collapsed]:justify-center">
-            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-serif text-sm font-semibold shrink-0">
-              {adminProfile.name.charAt(0).toUpperCase()}
-            </div>
-            <div className="group-data-[state=collapsed]:hidden transition-all duration-300 whitespace-nowrap overflow-hidden">
-              <p className="font-sans text-xs font-bold text-primary truncate max-w-[150px]">{adminProfile.name}</p>
-              <span className="inline-block px-1.5 py-0.5 mt-1 font-sans text-[8px] font-bold uppercase tracking-widest bg-neutral-100 dark:bg-neutral-800 border border-border/30 text-secondary rounded-sm">
-                {adminProfile.role === "SUPER_ADMIN"
-                  ? "Super Admin"
-                  : adminProfile.role === "ADMIN_PESANAN"
-                  ? "Admin Pesanan"
-                  : "Admin CMS"}
-              </span>
-            </div>
-          </div>
-        )}
-        
-        <SidebarMenu className="gap-1">
-          <SidebarMenuItem>
-            <form onSubmit={handleSignOut} className="w-full flex justify-start group-data-[state=collapsed]:justify-center">
-              <SidebarMenuButton type="submit" className="py-4 px-2 w-full text-left hover:bg-red-50 dark:hover:bg-red-950/10 rounded-none flex items-center justify-start group-data-[state=collapsed]:justify-center" tooltip="Keluar">
-                <span className="flex items-center gap-3 font-sans text-xs uppercase tracking-widest font-bold text-red-600 hover:text-red-700 transition-colors w-full justify-start group-data-[state=collapsed]:justify-center">
-                  <LogOut className="w-4 h-4 text-red-600 flex-shrink-0" />
-                  <span className="group-data-[state=collapsed]:hidden">Keluar</span>
-                </span>
-              </SidebarMenuButton>
-            </form>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 }

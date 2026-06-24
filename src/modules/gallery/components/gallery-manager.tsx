@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AdminHeader } from "@/components/admin-header";
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { createGalleryAction, deleteGalleryAction, updateGalleryAction } from "../actions/gallery-admin.action";
 import { Trash2, Plus, Image as ImageIcon, AlertCircle, FileVideo, UploadCloud, Edit3 } from "lucide-react";
@@ -280,15 +281,7 @@ export function GalleryManager({ initialGalleries, initialCategories }: GalleryM
       <AdminSidebar variant="sidebar" />
       <SidebarInset className="flex flex-col min-h-screen bg-background text-foreground">
 
-        {/* Header App Bar */}
-        <header className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-border/40 bg-background sticky top-0 z-40">
-          <div className="flex items-center gap-3">
-            <SidebarTrigger className="text-secondary hover:text-primary transition-colors" />
-            <span className="font-sans text-[10px] uppercase tracking-widest text-secondary font-bold hidden md:block">
-              Manajemen Studio Seniman Kamera
-            </span>
-          </div>
-        </header>
+        <AdminHeader title="Manajemen Studio Seniman Kamera" />
 
         {/* Content Container */}
         <div className="flex-1 px-6 md:px-12 py-10 max-w-[1200px] mx-auto w-full space-y-12">

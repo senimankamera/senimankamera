@@ -14,8 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin-sidebar";
+import { AdminHeader } from "@/components/admin-header";
 import { BookingRepository } from "@/src/modules/booking/repositories/booking.repository";
 
 export const revalidate = 0; // Ensure admin dashboard gets fresh database queries
@@ -137,19 +138,7 @@ export default async function AdminPage() {
       <AdminSidebar variant="sidebar" />
       <SidebarInset className="flex flex-col min-h-screen bg-background text-foreground">
 
-        {/* Header App Bar */}
-        <header className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-border/40 bg-background sticky top-0 z-40">
-          <div className="flex items-center gap-3">
-            <SidebarTrigger className="text-secondary hover:text-primary transition-colors" />
-            <img src="/logo.png" alt="SENIMAN_KAMERA" className="h-6 w-auto object-contain md:hidden" />
-            <span className="font-serif tracking-tighter font-semibold md:hidden">Admin</span>
-            <div className="hidden md:block">
-              <span className="font-sans text-[10px] uppercase tracking-widest text-secondary font-bold">
-                Seniman Kamera Studio Management
-              </span>
-            </div>
-          </div>
-        </header>
+        <AdminHeader title="Seniman Kamera Studio Management" />
 
         {/* Content Container */}
         <div className="flex-1 px-6 md:px-12 py-10 max-w-[1200px] mx-auto w-full space-y-16">
