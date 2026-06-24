@@ -17,7 +17,7 @@ if (process.env.NODE_ENV !== "production") {
       connectionString,
       max: 2, // Limit local pool size to prevent connection exhaustion
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      connectionTimeoutMillis: 10000,
     });
   }
   pool = globalForPrisma.pool;
@@ -26,7 +26,7 @@ if (process.env.NODE_ENV !== "production") {
     connectionString,
     max: 2, // Limit serverless function pool size in production
     idleTimeoutMillis: 10000, // Release connections quickly on Vercel
-    connectionTimeoutMillis: 5000,
+    connectionTimeoutMillis: 10000,
   });
 }
 
