@@ -17,6 +17,13 @@ export class BlockDateUseCase {
       throw new Error("Tanggal ini sudah dibooking. Tidak bisa diblokir.");
     }
 
+    const existingSlot = await this.calendarRepository.findSlotByDate(targetDate);
+    if (existingSlot?.status === "TIME_BASED_ACTIVE") {
+      throw new Error(
+        "Tanggal ini memiliki sesi foto per jam yang masih aktif. Batalkan semua sesi terlebih dahulu sebelum memblokir tanggal ini."
+      );
+    }
+
     return this.calendarRepository.upsertSlot(
       targetDate,
       "ManualBlock",

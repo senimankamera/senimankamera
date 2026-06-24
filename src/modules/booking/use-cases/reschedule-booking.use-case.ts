@@ -23,9 +23,10 @@ export class RescheduleBookingUseCase {
       throw new Error(`Booking dengan ID ${id} tidak ditemukan.`);
     }
 
+    const isTimeBased = !!booking.sessionStartTime;
+
     const packageRepo = new (await import("../repositories/package.repository")).PackageRepository();
     const pkg = await packageRepo.findByNameOrCategory(booking.packageType);
-    const isTimeBased = pkg?.category?.bookingType === "TIME_BASED";
 
     const targetDate = new Date(newDate);
     targetDate.setHours(12, 0, 0, 0);
@@ -60,13 +61,12 @@ export class RescheduleBookingUseCase {
         throw new Error("Waktu sesi yang dipilih bertabrakan dengan booking lain. Silakan pilih waktu lain.");
       }
     } else {
-      // Validate that the new date is not booked by another booking/slot
-      const isBooked = await this.bookingRepository.isDateBooked(targetDate);
-      if (isBooked) {
-        const existingSlot = await this.calendarRepository.findSlotByDate(targetDate);
-        if (existingSlot && existingSlot.bookingId !== id) {
-          throw new Error("Tanggal baru sudah dibooking. Silakan pilih tanggal lain.");
-        }
+      // Untuk DATE_ONLY: tidak boleh ada slot apapun di tanggal tujuan yang bukan milik booking ini sendiri
+      const existingSlot = await this.calendarRepository.findSlotByDate(targetDate);
+      if (existingSlot && existingSlot.bookingId !== id) {
+        throw new Error(
+          "Tanggal baru sudah memiliki pemesanan atau sesi aktif. Silakan pilih tanggal lain."
+        );
       }
     }
 

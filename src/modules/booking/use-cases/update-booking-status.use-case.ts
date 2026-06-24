@@ -22,10 +22,8 @@ export class UpdateBookingStatusUseCase {
     // Update booking status
     const updatedBooking = await this.bookingRepository.updateBookingStatus(id, status);
 
-    // Get package to check booking type
-    const packageRepo = new (await import("../repositories/package.repository")).PackageRepository();
-    const pkg = await packageRepo.findByNameOrCategory(booking.packageType);
-    const isTimeBased = pkg?.category?.bookingType === "TIME_BASED";
+    // Check booking type using stored sessionStartTime (safe if package is deleted)
+    const isTimeBased = !!booking.sessionStartTime;
 
     // Update or create CalendarSlot status based on booking status
     const startOfDay = new Date(booking.bookingDate);
