@@ -300,10 +300,11 @@ export function CustomerManager({
 
               {/* Nama Lengkap */}
               <div className="space-y-1.5">
-                <label className="uppercase tracking-wider text-secondary font-bold block">
+                <label htmlFor="customer-fullname-input" className="uppercase tracking-wider text-secondary font-bold block">
                   Nama Lengkap
                 </label>
                 <input
+                  id="customer-fullname-input"
                   type="text"
                   placeholder="Nama Lengkap Pelanggan"
                   value={fullName}
@@ -315,10 +316,11 @@ export function CustomerManager({
 
               {/* Email */}
               <div className="space-y-1.5">
-                <label className="uppercase tracking-wider text-secondary font-bold block">
+                <label htmlFor="customer-email-input" className="uppercase tracking-wider text-secondary font-bold block">
                   Email
                 </label>
                 <input
+                  id="customer-email-input"
                   type="email"
                   placeholder="email@domain.com"
                   value={email}
@@ -330,10 +332,11 @@ export function CustomerManager({
 
               {/* Nomor Handphone */}
               <div className="space-y-1.5">
-                <label className="uppercase tracking-wider text-secondary font-bold block">
+                <label htmlFor="customer-phone-input" className="uppercase tracking-wider text-secondary font-bold block">
                   No. WhatsApp (WA)
                 </label>
                 <input
+                  id="customer-phone-input"
                   type="text"
                   placeholder="contoh: 081234567890"
                   value={phoneNumber}
@@ -344,7 +347,7 @@ export function CustomerManager({
 
               {/* Instagram */}
               <div className="space-y-1.5">
-                <label className="uppercase tracking-wider text-secondary font-bold block">
+                <label htmlFor="customer-instagram-input" className="uppercase tracking-wider text-secondary font-bold block">
                   Username Instagram (Opsional)
                 </label>
                 <div className="relative">
@@ -352,6 +355,7 @@ export function CustomerManager({
                     @
                   </span>
                   <input
+                    id="customer-instagram-input"
                     type="text"
                     placeholder="username"
                     value={instagram.replace(/^@+/, "")}
@@ -363,6 +367,7 @@ export function CustomerManager({
 
               <div className="pt-2">
                 <Button
+                  id="customer-submit-button"
                   type="submit"
                   disabled={isPending}
                   className="w-full uppercase tracking-widest py-5 rounded-none font-bold text-white cursor-pointer"
@@ -390,6 +395,7 @@ export function CustomerManager({
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-secondary" />
                   <input
+                    id="customer-search-input"
                     type="text"
                     placeholder="Cari nama, email, WA..."
                     value={search}
@@ -403,6 +409,7 @@ export function CustomerManager({
 
                 {/* Filter Category */}
                 <select
+                  id="customer-category-filter"
                   value={categoryFilter}
                   onChange={(e) => {
                     setCategoryFilter(e.target.value);
@@ -422,6 +429,7 @@ export function CustomerManager({
                 {/* Filter Presence */}
                 <div className="flex gap-2">
                   <select
+                    id="customer-status-filter"
                     value={presenceFilter}
                     onChange={(e) => {
                       setPresenceFilter(e.target.value);
@@ -435,6 +443,7 @@ export function CustomerManager({
                   </select>
 
                   <Button
+                    id="customer-reset-filters-button"
                     type="button"
                     variant="outline"
                     onClick={handleResetFilters}
@@ -451,6 +460,7 @@ export function CustomerManager({
                   <thead>
                     <tr className="border-b border-border/40 uppercase tracking-wider text-secondary font-bold">
                       <th
+                        id="customer-sort-name"
                         className="py-3 px-2 cursor-pointer hover:text-primary transition-colors"
                         onClick={() => handleSort("fullName")}
                       >
@@ -459,6 +469,7 @@ export function CustomerManager({
                         </span>
                       </th>
                       <th
+                        id="customer-sort-contact"
                         className="py-3 px-2 cursor-pointer hover:text-primary transition-colors"
                         onClick={() => handleSort("email")}
                       >
@@ -468,6 +479,7 @@ export function CustomerManager({
                       </th>
                       <th className="py-3 px-2">Instagram</th>
                       <th
+                        id="customer-sort-booking"
                         className="py-3 px-2 text-center cursor-pointer hover:text-primary transition-colors"
                         onClick={() => handleSort("bookingsCount")}
                       >
@@ -511,6 +523,7 @@ export function CustomerManager({
                             <div className="flex justify-end gap-1.5">
                               {/* Edit Button */}
                               <Button
+                                id={`customer-edit-${cust.id}`}
                                 type="button"
                                 variant="ghost"
                                 size="icon"
@@ -523,6 +536,7 @@ export function CustomerManager({
 
                               {/* Delete Button */}
                               <Button
+                                id={`customer-delete-${cust.id}`}
                                 type="button"
                                 variant="ghost"
                                 size="icon"
@@ -607,6 +621,7 @@ export function CustomerManager({
 
             <div className="flex justify-end gap-3 pt-2">
               <button
+                id="customer-delete-modal-cancel"
                 type="button"
                 onClick={() => setDeleteConfirmId(null)}
                 className="px-4 py-2.5 bg-transparent border border-border hover:bg-neutral-100 dark:hover:bg-neutral-900 text-primary font-sans text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer rounded-none"
@@ -614,6 +629,7 @@ export function CustomerManager({
                 Batal
               </button>
               <button
+                id="customer-delete-modal-confirm"
                 type="button"
                 onClick={confirmDelete}
                 disabled={isPending}
