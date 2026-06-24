@@ -3,6 +3,7 @@
 import { CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface ClientData {
   fullName: string;
@@ -87,6 +88,17 @@ export function BookingSuccessView({ booking }: BookingSuccessViewProps) {
         {statusConfig.description}
       </p>
 
+      {/* Alert Banner for Manual WhatsApp Confirmation */}
+      {(booking.status === "APPROVED" || booking.status === "LUNAS") && (
+        <div className="w-full mb-6 p-4 border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/30 text-amber-800 dark:text-amber-300 font-sans text-xs text-left leading-relaxed rounded-none flex items-start gap-2.5">
+          <span className="text-base shrink-0 leading-none">⚠️</span>
+          <div>
+            <span className="font-bold uppercase tracking-wider block mb-1">Konfirmasi Manual Wajib</span>
+            Pembayaran Anda telah diterima. Anda <strong>WAJIB</strong> melakukan konfirmasi manual melalui WhatsApp untuk mengamankan slot jadwal pemotretan Anda. Silakan klik tombol <strong>"Hubungi via WhatsApp Owner"</strong> di bawah untuk mengirim detail pemesanan ke admin.
+          </div>
+        </div>
+      )}
+
       {/* Invoice Summary Card */}
       <div className="w-full border border-border/40 bg-muted/20 p-6 text-left mb-8 font-sans text-xs space-y-3">
         <div className="flex justify-between border-b border-border/20 pb-2.5">
@@ -147,7 +159,12 @@ export function BookingSuccessView({ booking }: BookingSuccessViewProps) {
       <div className="flex flex-col gap-4 w-full">
         <Button 
           onClick={() => window.open(waUrl, "_blank")}
-          className="rounded-none font-sans text-[10px] uppercase tracking-widest py-6 text-white bg-primary hover:opacity-90 w-full flex items-center justify-center gap-2 cursor-pointer font-bold"
+          className={cn(
+            "rounded-none font-sans text-[10px] uppercase tracking-widest py-6 text-white w-full flex items-center justify-center gap-2 cursor-pointer font-bold transition-all duration-300",
+            (booking.status === "APPROVED" || booking.status === "LUNAS")
+              ? "bg-emerald-600 hover:bg-emerald-700 shadow-lg animate-pulse"
+              : "bg-primary hover:opacity-90"
+          )}
         >
           Hubungi via WhatsApp Owner Untuk Konfirmasi Manual
         </Button>
