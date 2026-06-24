@@ -21,6 +21,13 @@ export class InitiateBookingDraftUseCase {
   ) {}
 
   async execute(input: InitiateBookingDraftInputType, baseUrl?: string) {
+    // Lazily clean up expired drafts
+    try {
+      await this.bookingDraftRepository.deleteExpiredDrafts();
+    } catch (e) {
+      console.error("Failed to run lazy cleanup for expired booking drafts:", e);
+    }
+
     // Validate schema
     const parsed = InitiateBookingDraftSchema.parse(input);
 
