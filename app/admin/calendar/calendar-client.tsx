@@ -87,6 +87,7 @@ interface Package {
   name: string;
   price: number;
   categoryName?: string;
+  bookingType?: string;
 }
 
 interface CalendarStats {
@@ -144,6 +145,10 @@ export function CalendarClient({ initialSlots, timeBasedBookings, packages, stat
     eventLocation: "",
     notes: "",
   });
+ 
+  const selectedPkg = useMemo(() => {
+    return packages.find((p) => p.name === bookingForm.packageType);
+  }, [packages, bookingForm.packageType]);
 
   // Helper YYYY-MM-DD
   const formatDateKey = (date: Date) => {
@@ -1182,6 +1187,30 @@ export function CalendarClient({ initialSlots, timeBasedBookings, packages, stat
                       ))}
                     </select>
                   </div>
+
+                  {/* Selected Package Details Block */}
+                  {selectedPkg && (
+                    <div className="md:col-span-2 bg-neutral-50 dark:bg-neutral-900 border border-border/20 p-3 text-[11px] space-y-1 font-sans">
+                      <div className="flex justify-between">
+                        <span className="text-secondary font-medium">Kategori Paket:</span>
+                        <span className="text-primary font-bold">{selectedPkg.categoryName || "-"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-secondary font-medium">Harga Total Paket:</span>
+                        <span className="text-primary font-bold">
+                          {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(selectedPkg.price)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t border-border/10 pt-1 mt-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                        <span>Down Payment (DP):</span>
+                        <span>
+                          {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(
+                            selectedPkg.bookingType === "TIME_BASED" ? 150000 : selectedPkg.price * 0.5
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Nama Acara */}
                   <div className="space-y-1.5">

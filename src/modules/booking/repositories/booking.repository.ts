@@ -125,6 +125,18 @@ export class BookingRepository {
         });
       }
 
+      // For manual bookings, record the DP payment transaction immediately so revenue is updated
+      if (status === "ManualBooking" && data.dpAmount) {
+        await tx.paymentTransaction.create({
+          data: {
+            bookingId: booking.id,
+            type: "DP",
+            amount: data.dpAmount,
+            uniqueKey: `${booking.id}-DP`,
+          },
+        });
+      }
+
       return booking;
     });
   }

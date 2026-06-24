@@ -108,6 +108,7 @@ export default async function AdminCalendarPage() {
     name: p.name,
     price: p.price,
     categoryName: p.category?.name || "",
+    bookingType: p.category?.bookingType || "DATE_ONLY",
   }));
 
   return (
