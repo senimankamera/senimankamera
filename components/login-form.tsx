@@ -121,6 +121,7 @@ export function LoginForm({
             </Label>
             <div className="relative">
               <Input
+                key="reset-identifier"
                 id="reset-identifier"
                 type="text"
                 placeholder="senimankamera / email@domain.com"
@@ -185,6 +186,7 @@ export function LoginForm({
               Kode OTP (6-digit)
             </Label>
             <Input
+              key="verify-otp-code"
               id="otp"
               type="text"
               maxLength={6}
@@ -203,6 +205,7 @@ export function LoginForm({
             </Label>
             <div className="relative">
               <Input
+                key="verify-new-password"
                 id="new-password"
                 type={showNewPassword ? "text" : "password"}
                 placeholder="••••••••"
@@ -229,6 +232,7 @@ export function LoginForm({
             </Label>
             <div className="relative">
               <Input
+                key="verify-confirm-password"
                 id="confirm-password"
                 type={showNewPassword ? "text" : "password"}
                 placeholder="••••••••"
@@ -293,6 +297,7 @@ export function LoginForm({
           </Label>
           <div className="relative">
             <Input
+              key="login-email"
               id="email"
               name="email"
               type="text"
@@ -323,6 +328,7 @@ export function LoginForm({
           </div>
           <div className="relative">
             <Input
+              key="login-password"
               id="password"
               name="password"
               type={showPassword ? "text" : "password"}
