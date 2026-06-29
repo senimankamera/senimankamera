@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 export async function createCategoryAction(data: {
   name: string;
   label: string;
+  code?: string;
   description?: string;
   order?: number;
   bookingType?: string;
@@ -39,6 +40,7 @@ export async function updateCategoryAction(
   data: {
     name?: string;
     label?: string;
+    code?: string;
     description?: string | null;
     order?: number;
     bookingType?: string;

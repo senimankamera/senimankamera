@@ -1,32 +1,19 @@
 import React from "react";
-import { prisma } from "@/src/infrastructure/prisma/client";
-import { BackgroundSlideshow } from "@/components/background-slideshow";
 
 export const revalidate = 0;
 
 export default async function TermsPage() {
-  let bgImages = ["/hero.png", "/logo.jpg", "/owner.jpg"];
-  try {
-    const galleries = await prisma.gallery.findMany({
-      where: {
-        mediaType: "image",
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 6,
-    });
-    if (galleries.length > 0) {
-      bgImages = galleries.map((g: any) => g.imageUrl);
-    }
-  } catch (error) {
-    console.error("Failed to fetch gallery backgrounds:", error);
-  }
-
   return (
-    <div className="w-full min-h-screen relative flex flex-col justify-center">
-      {/* Background Slideshow */}
-      <BackgroundSlideshow images={bgImages} />
+    <div className="w-full min-h-screen relative flex flex-col justify-center overflow-hidden bg-neutral-950">
+      {/* Static Hero Background */}
+      <div
+        className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-60 pointer-events-none"
+        style={{
+          backgroundImage: `url('/hero.png')`
+        }}
+      />
+      {/* Dark Vignette Overlay */}
+      <div className="fixed inset-0 z-10 bg-gradient-to-b from-black/40 via-black/30 to-black/80 pointer-events-none" />
 
       {/* Content Container */}
       <div className="relative z-20 w-full px-6 md:px-20 max-w-[1440px] mx-auto py-24 text-white">

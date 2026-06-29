@@ -41,13 +41,13 @@ export default async function TestimonialsPage() {
         </p>
       </section>
 
-      {/* Grid Layout (Matching Portfolio structural feel) */}
+      {/* Dynamic Masonry Columns Layout (Organik & Bebas tanpa peregangan tinggi) */}
       {displayTestimonials.length === 0 ? (
         <div className="w-full text-center py-24 text-secondary/60 font-sans text-sm border border-dashed border-border/30 rounded bg-muted/10">
           Belum ada testimoni dari klien saat ini.
         </div>
       ) : (
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <section className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
           {displayTestimonials.map((item, idx: number) => {
             const delays = ["delay-[0ms]", "delay-[150ms]", "delay-[300ms]", "delay-[450ms]"];
             const delayClass = delays[idx % delays.length];
@@ -58,9 +58,9 @@ export default async function TestimonialsPage() {
                 delay={delayClass}
                 initialClass="opacity-0 scale-95 translate-y-8"
                 animateClass="opacity-100 scale-100 translate-y-0"
-                className="flex"
+                className="break-inside-avoid inline-block w-full mb-8"
               >
-                <div className="relative overflow-hidden border border-white/40 bg-card/20 backdrop-blur-sm p-6 md:p-8 flex flex-col justify-between rounded-none w-full hover:border-primary/30 transition-all duration-500 shadow-sm text-center group">
+                <div className="relative overflow-hidden border border-white/40 bg-card/20 backdrop-blur-sm p-6 md:p-8 flex flex-col justify-start rounded-none w-full hover:border-primary/40 transition-all duration-500 shadow-sm text-center group h-auto">
                   {/* Blurred Profile Photo Background */}
                   {item.avatarUrl ? (
                     <div
@@ -74,9 +74,9 @@ export default async function TestimonialsPage() {
                   {/* Subtle vignette inner overlay */}
                   <div className="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-card/5 to-card/50 opacity-40 pointer-events-none" />
 
-                  <div className="w-full relative z-10 flex flex-col justify-between h-full">
+                  <div className="w-full relative z-10 flex flex-col h-auto">
                     {/* Client Info Block - Centered at the top */}
-                    <div className="flex flex-col items-center gap-3 pb-5 border-b border-border/10 mb-5">
+                    <div className="flex flex-col items-center gap-3 pb-5 border-b border-border/15 mb-5">
                       <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-100/80 border border-border/40 flex-shrink-0 flex items-center justify-center transition-transform duration-500 group-hover:scale-105 shadow-sm relative">
                         {item.avatarUrl ? (
                           <Image
@@ -102,9 +102,9 @@ export default async function TestimonialsPage() {
                       </div>
                     </div>
 
-                    {/* Content block below inside glassmorphic wrapper */}
-                    <div className="bg-card/85 backdrop-blur-md border border-border/20 p-5 rounded-none shadow-sm text-center">
-                      <p className="font-sans text-xs sm:text-sm text-secondary italic leading-relaxed">
+                    {/* Content block below - scrollable without scrollbar if long */}
+                    <div className="bg-card/85 backdrop-blur-md border border-border/20 p-5 rounded-none shadow-sm text-center h-auto max-h-[260px] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                      <p className="font-sans text-xs sm:text-sm text-secondary italic leading-relaxed break-words">
                         &quot;{item.content}&quot;
                       </p>
                     </div>

@@ -64,6 +64,7 @@ model Category {
   id          String    @id @default(uuid())
   name        String    @unique  // e.g. "Wedding", "Portraits"
   label       String             // e.g. "Pernikahan", "Potret"
+  code        String    @default("CAT") // e.g. "EG"
   description String?            // Deskripsi singkat untuk halaman booking
   order       Int       @default(0)
   bookingType String    @default("DATE_ONLY") // "DATE_ONLY" | "TIME_BASED"
@@ -77,6 +78,7 @@ model Package {
   name             String
   categoryId       String
   category         Category @relation(fields: [categoryId], references: [id])
+  code             String   @default("PKG") // e.g. "GLD"
   price            Float
   features         String[]
   description      String?

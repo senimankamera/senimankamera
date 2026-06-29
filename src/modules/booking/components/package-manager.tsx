@@ -45,6 +45,7 @@ interface PackageItem {
   name: string;
   categoryId: string;
   category?: CategoryItem | null;
+  code?: string;
   price: number;
   features: string[];
   description: string | null;
@@ -75,6 +76,7 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [category, setCategory] = useState(initialCategories[0]?.id || "");
+  const [code, setCode] = useState("");
   const [price, setPrice] = useState("");
   const [features, setFeatures] = useState("");
   const [description, setDescription] = useState("");
@@ -93,6 +95,7 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
     setEditId(null);
     setName("");
     setCategory(initialCategories[0]?.id || "");
+    setCode("");
     setPrice("");
     setFeatures("");
     setDescription("");
@@ -113,6 +116,7 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
     setEditId(pkg.id);
     setName(pkg.name);
     setCategory(pkg.categoryId);
+    setCode(pkg.code || "");
     setPrice(pkg.price.toString());
     setFeatures(pkg.features.join("\n"));
     setDescription(pkg.description || "");
@@ -130,10 +134,12 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
     setError(null);
 
     const priceNum = parseFloat(price);
-    if (!name || !category || isNaN(priceNum) || !features) {
-      setError("Semua field wajib diisi (Nama, Kategori, Harga, Fitur).");
+    if (!name || !category || !code || isNaN(priceNum) || !features) {
+      setError("Semua field wajib diisi (Nama, Kategori, Kode Paket, Harga, Fitur).");
       return;
     }
+
+    const formattedCode = code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
 
     const sessionDurationNum = isTimeBased ? parseInt(sessionDuration, 10) : null;
     if (isTimeBased && (isNaN(sessionDurationNum!) || sessionDurationNum! <= 0)) {
@@ -193,6 +199,7 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
           response = await updatePackageAction(editId, {
             name,
             categoryId: category,
+            code: formattedCode,
             price: priceNum,
             features: featuresList,
             description: description || undefined,
@@ -214,6 +221,7 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
           response = await createPackageAction({
             name,
             categoryId: category,
+            code: formattedCode,
             price: priceNum,
             features: featuresList,
             description: description || undefined,
@@ -331,6 +339,22 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Package Code Prefix */}
+              <div className="space-y-1.5">
+                <label className="uppercase tracking-wider text-secondary font-bold block">Kode Paket Prefix (WAJIB)</label>
+                <input
+                  type="text"
+                  placeholder="contoh: GLD, SLV, BZ"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+                  className="w-full px-3 py-2 bg-transparent border border-border/40 focus:border-primary focus:outline-none rounded-none text-primary uppercase font-mono tracking-wider"
+                  required
+                />
+                <p className="text-[10px] text-secondary/60">
+                  Kode singkat paket yang digabung dengan kode kategori (misal: GLD untuk Gold).
+                </p>
               </div>
 
               {/* Price */}
@@ -647,6 +671,11 @@ export function PackageManager({ initialPackages, initialCategories }: PackageMa
                               {pkg.category?.label || "Kategori"}
                             </span>
                              <div className="flex gap-1.5 items-center flex-wrap">
+                               {pkg.code && (
+                                 <span className="font-mono text-[8px] uppercase tracking-widest text-amber-800 bg-amber-100 dark:text-amber-300 dark:bg-amber-950/40 px-2 py-0.5 font-bold border border-amber-500/20">
+                                   Prefix: {pkg.code}
+                                 </span>
+                               )}
                                {pkg.imageUrl && (
                                  <span className="font-sans text-[8px] uppercase tracking-widest text-emerald-800 bg-emerald-100 dark:text-emerald-350 dark:bg-emerald-950/40 px-2 py-0.5 font-bold">
                                    BG Gambar

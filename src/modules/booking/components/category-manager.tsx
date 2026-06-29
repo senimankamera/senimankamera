@@ -15,6 +15,7 @@ interface CategoryItem {
   id: string;
   name: string;
   label: string;
+  code?: string;
   description: string | null;
   order: number;
   bookingType: string;
@@ -41,6 +42,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [label, setLabel] = useState("");
+  const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [order, setOrder] = useState("0");
   const [bookingType, setBookingType] = useState("DATE_ONLY");
@@ -50,6 +52,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
     setEditId(null);
     setName("");
     setLabel("");
+    setCode("");
     setDescription("");
     setOrder("0");
     setBookingType("DATE_ONLY");
@@ -60,6 +63,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
     setEditId(cat.id);
     setName(cat.name);
     setLabel(cat.label);
+    setCode(cat.code || "");
     setDescription(cat.description || "");
     setOrder(cat.order.toString());
     setBookingType(cat.bookingType || "DATE_ONLY");
@@ -71,8 +75,8 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
     setError(null);
 
     const orderNum = parseInt(order);
-    if (!name || !label || isNaN(orderNum)) {
-      setError("Field Nama, Label, dan Urutan wajib diisi.");
+    if (!name || !label || !code || isNaN(orderNum)) {
+      setError("Field Nama, Label, Kode Kategori (Prefix), dan Urutan wajib diisi.");
       return;
     }
 
@@ -82,12 +86,15 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
       return;
     }
 
+    const formattedCode = code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+
     startTransition(async () => {
       if (editId) {
         // Edit Mode
         const response = await updateCategoryAction(editId, {
           name,
           label,
+          code: formattedCode,
           description: description || null,
           order: orderNum,
           bookingType,
@@ -114,6 +121,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
         const response = await createCategoryAction({
           name,
           label,
+          code: formattedCode,
           description: description || undefined,
           order: orderNum,
           bookingType,
@@ -229,6 +237,24 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
                 />
                 <p className="text-[10px] text-secondary/60">
                   Nama yang akan ditampilkan ke publik / client.
+                </p>
+              </div>
+
+              {/* Category Code Prefix */}
+              <div className="space-y-1.5">
+                <label className="uppercase tracking-wider text-secondary font-bold block">
+                  Kode Kategori Prefix (WAJIB)
+                </label>
+                <input
+                  type="text"
+                  placeholder="contoh: EG, WDD, PRT"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+                  className="w-full px-3 py-2 bg-transparent border border-border/40 focus:border-primary focus:outline-none rounded-none text-primary uppercase font-mono tracking-wider"
+                  required
+                />
+                <p className="text-[10px] text-secondary/60">
+                  Kode singkat huruf kapital yang akan digabungkan menjadi ID Booking (misal: EG).
                 </p>
               </div>
 
@@ -368,6 +394,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
                       <th className="pb-3 pr-4 font-bold text-[10px] w-[80px]">Urutan</th>
                       <th className="pb-3 pr-4 font-bold text-[10px]">Nama Internal</th>
                       <th className="pb-3 pr-4 font-bold text-[10px]">Label Publik</th>
+                      <th className="pb-3 pr-4 font-bold text-[10px]">Prefix ID</th>
                       <th className="pb-3 pr-4 font-bold text-[10px] w-[110px]">Tipe Booking</th>
                       <th className="pb-3 pr-4 font-bold text-[10px] hidden md:table-cell">Deskripsi</th>
                       <th className="pb-3 pr-4 font-bold text-[10px] text-center w-[80px]">Paket</th>
@@ -390,6 +417,11 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
                           </span>
                         </td>
                         <td className="py-4 pr-4 text-primary font-semibold">{cat.label}</td>
+                        <td className="py-4 pr-4">
+                          <span className="inline-flex items-center bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-none font-mono text-[10px] font-bold uppercase tracking-wider">
+                            {cat.code || "CAT"}
+                          </span>
+                        </td>
                         <td className="py-4 pr-4">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-none text-[9px] font-bold uppercase tracking-wider ${
                             cat.bookingType === "TIME_BASED" 

@@ -19,15 +19,11 @@ export default async function ServicesPage() {
       getPackagesUseCase.execute(),
       categoryRepository.findAll(),
     ]);
-    packages = resPackages;
-    categories = resCategories;
+    packages = resPackages || [];
+    categories = resCategories || [];
   } catch (error) {
     console.error("Failed to fetch packages and categories:", error);
     isDbError = true;
-  }
-
-  if (isDbError || packages.length === 0) {
-    return null;
   }
 
   const serializedPackages = JSON.parse(JSON.stringify(packages));
@@ -50,10 +46,16 @@ export default async function ServicesPage() {
 
       {/* Dynamic Services Selector (Packages & Price Info) */}
       <section className="py-8 px-6 md:px-20 w-full max-w-[1440px] mx-auto">
-        <ServicesSelector
-          initialPackages={serializedPackages}
-          categories={serializedCategories}
-        />
+        {isDbError || packages.length === 0 ? (
+          <div className="w-full text-center py-20 text-secondary/60 font-sans text-sm border border-dashed border-border/30 rounded bg-muted/10 max-w-2xl mx-auto">
+            Belum ada paket layanan yang ditambahkan saat ini.
+          </div>
+        ) : (
+          <ServicesSelector
+            initialPackages={serializedPackages}
+            categories={serializedCategories}
+          />
+        )}
       </section>
     </div>
   );

@@ -1,9 +1,11 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, Lock, Unlock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { BookingReceiptDownload } from "./booking-receipt-download";
 
 interface ClientData {
   fullName: string;
@@ -34,13 +36,19 @@ interface BookingSuccessViewProps {
 
 export function BookingSuccessView({ booking }: BookingSuccessViewProps) {
   const router = useRouter();
+  const [hasClickedWa, setHasClickedWa] = useState(false);
 
   const isTimeBased = !!booking.sessionStartTime;
 
   const waText = encodeURIComponent(
-    `Halo Kak, saya sudah melakukan booking dan pembayaran DP untuk acara saya dengan ID: ${booking.id}.\n\nBerikut detail pesanan saya:\n- Klien: ${booking.client.fullName}\n- Instagram: ${booking.client.instagram || "-"}\n- Paket: ${booking.categoryName ? `${booking.categoryName} - ` : ""}${booking.packageType}\n- Acara: ${booking.eventName || "-"}\n- Tanggal: ${new Date(booking.bookingDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}\n- Waktu: ${isTimeBased ? `${booking.sessionStartTime} – ${booking.sessionEndTime}` : booking.eventTime || "-"} WIB\n\nMohon dibantu untuk proses konfirmasi booking. Terima kasih.`
+    `Halo Kak, saya sudah melakukan booking dan pembayaran DP untuk acara saya dengan Kode Tracking: ${booking.id}.\n\nBerikut detail pesanan saya:\n- Klien: ${booking.client.fullName}\n- Instagram: ${booking.client.instagram || "-"}\n- Paket: ${booking.categoryName ? `${booking.categoryName} - ` : ""}${booking.packageType}\n- Acara: ${booking.eventName || "-"}\n- Tanggal: ${new Date(booking.bookingDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}\n- Waktu: ${isTimeBased ? `${booking.sessionStartTime} – ${booking.sessionEndTime}` : booking.eventTime || "-"} WIB\n\nMohon dibantu untuk proses konfirmasi booking. Terima kasih.`
   );
   const waUrl = `https://wa.me/6285721598190?text=${waText}`;
+
+  const handleWaClick = () => {
+    window.open(waUrl, "_blank");
+    setHasClickedWa(true);
+  };
 
   // Helper to determine status badge and helper text
   const getStatusConfig = (status: string) => {
@@ -81,7 +89,7 @@ export function BookingSuccessView({ booking }: BookingSuccessViewProps) {
   const statusConfig = getStatusConfig(booking.status);
 
   return (
-    <div className="w-full max-w-xl mx-auto px-6 py-12 border border-border/40 bg-card text-center flex flex-col items-center animate-[fadeIn_0.5s_ease-out]">
+    <div className="w-full max-w-xl mx-auto px-6 py-12 border border-border/40 bg-card text-center flex flex-col items-center animate-[fadeIn_0.5s_ease-out] my-12">
       <CheckCircle2 className="w-16 h-16 text-green-700 mb-6 stroke-1 animate-pulse" />
       <h2 className="font-serif text-3xl text-primary mb-3 font-medium">Pemesanan Berhasil</h2>
       
@@ -105,6 +113,12 @@ export function BookingSuccessView({ booking }: BookingSuccessViewProps) {
         <div className="flex justify-between border-b border-border/20 pb-2.5">
           <span className="text-secondary font-semibold uppercase tracking-wider text-[10px]">Detail</span>
           <span className="text-primary font-bold">Sesi {booking.packageType}</span>
+        </div>
+        <div className="flex justify-between items-center bg-background p-2.5 border border-border/30">
+          <span className="text-secondary font-bold uppercase tracking-wider text-[10px]">Kode Tracking:</span>
+          <span className="text-primary font-mono font-bold text-sm bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 border border-amber-500/20">
+            {booking.id}
+          </span>
         </div>
         <div className="flex justify-between">
           <span className="text-secondary">Status Pesanan:</span>
@@ -158,8 +172,9 @@ export function BookingSuccessView({ booking }: BookingSuccessViewProps) {
       </div>
 
       <div className="flex flex-col gap-4 w-full">
+        <BookingReceiptDownload booking={booking} />
         <Button 
-          onClick={() => window.open(waUrl, "_blank")}
+          onClick={handleWaClick}
           className={cn(
             "rounded-none font-sans text-[10px] uppercase tracking-widest py-6 text-white w-full flex items-center justify-center gap-2 cursor-pointer font-bold transition-all duration-300",
             (booking.status === "PENDING" || booking.status === "APPROVED" || booking.status === "LUNAS")
@@ -169,22 +184,47 @@ export function BookingSuccessView({ booking }: BookingSuccessViewProps) {
         >
           Hubungi via WhatsApp Owner (WAJIB)
         </Button>
-        <div className="flex flex-col sm:flex-row gap-3">
+
+        {/* Locked / Unlocked Navigation Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 mt-2">
           <Button 
             onClick={() => router.push("/portfolio")}
+            disabled={!hasClickedWa}
             variant="outline"
-            className="rounded-none font-sans text-[10px] uppercase tracking-widest py-4 border-border text-primary hover:bg-neutral-100 flex-1 cursor-pointer"
+            className={cn(
+              "rounded-none font-sans text-[10px] uppercase tracking-widest py-5 border-border flex-1 flex items-center justify-center gap-2 transition-all duration-300 font-bold",
+              hasClickedWa
+                ? "border-primary text-primary hover:bg-neutral-100 cursor-pointer shadow-sm"
+                : "opacity-50 cursor-not-allowed bg-muted/30 text-secondary"
+            )}
+            title={!hasClickedWa ? "Klik WhatsApp Konfirmasi untuk membuka kunci" : ""}
           >
+            {!hasClickedWa ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5 text-green-600" />}
             Lihat Portofolio
           </Button>
+
           <Button 
             onClick={() => router.push("/")}
-            variant="ghost"
-            className="rounded-none font-sans text-[10px] uppercase tracking-widest py-4 text-secondary hover:text-primary flex-1 cursor-pointer"
+            disabled={!hasClickedWa}
+            variant={hasClickedWa ? "default" : "outline"}
+            className={cn(
+              "rounded-none font-sans text-[10px] uppercase tracking-widest py-5 flex-1 flex items-center justify-center gap-2 transition-all duration-300 font-bold",
+              hasClickedWa
+                ? "bg-primary text-white hover:opacity-90 cursor-pointer shadow-sm"
+                : "opacity-50 cursor-not-allowed text-secondary bg-muted/20 border-border"
+            )}
+            title={!hasClickedWa ? "Klik WhatsApp Konfirmasi untuk membuka kunci" : ""}
           >
+            {!hasClickedWa ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5 text-green-400" />}
             Kembali ke Beranda
           </Button>
         </div>
+
+        {!hasClickedWa && (
+          <p className="font-sans text-[10px] text-secondary/70 italic mt-1">
+            * Tombol navigasi di atas terkunci 🔒 dan akan terbuka otomatis setelah Anda mengklik tombol merah WhatsApp WAJIB.
+          </p>
+        )}
       </div>
     </div>
   );

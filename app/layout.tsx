@@ -18,7 +18,11 @@ export const metadata: Metadata = {
   title: "Seniman Kamera | PHOTOSHOOT",
   description: "Immersive, editorial-style wedding, prewedding, and event photography in Indonesia.",
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
 };
 

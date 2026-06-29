@@ -21,50 +21,6 @@ export default async function BookingSuccessPage({ searchParams }: BookingSucces
 
   const result = await getBookingByIdAction(orderId);
 
-  if (result.isPendingWebhook) {
-    async function handleCancel() {
-      "use server";
-      await cancelDraftBookingAction(orderId as string);
-      redirect("/book");
-    }
-
-    return (
-      <div className="w-full max-w-[1440px] mx-auto px-6 md:px-20 py-20 flex flex-col items-center justify-center min-h-[50vh]">
-        <div className="w-full max-w-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/30 p-8 text-center flex flex-col items-center space-y-6">
-          <div className="flex flex-col items-center">
-            <Loader2 className="w-12 h-12 text-amber-700 dark:text-amber-400 mb-4 animate-spin" />
-            <h2 className="font-serif text-2xl text-amber-900 dark:text-amber-300 mb-2 font-medium">Memverifikasi Pembayaran</h2>
-            <p className="font-sans text-xs text-amber-700 dark:text-amber-400 font-light leading-relaxed">
-              {result.error}
-            </p>
-          </div>
-          
-          <form action={handleCancel} className="w-full pt-2">
-            <Button
-              type="submit"
-              variant="outline"
-              className="w-full rounded-none font-sans text-xs uppercase tracking-widest py-5 border-amber-300 text-amber-800 hover:bg-amber-100 hover:text-amber-900 cursor-pointer font-bold"
-            >
-              Batalkan Pemesanan & Coba Lagi
-            </Button>
-          </form>
-
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `setTimeout(() => {
-                const buttons = document.querySelectorAll('button');
-                const isSubmitting = Array.from(buttons).some(b => b.disabled || b.innerText.includes('Memproses') || b.innerText.includes('Batal'));
-                if (!isSubmitting) {
-                  window.location.reload();
-                }
-              }, 3000);`
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
-
   if (!result.success || !result.data) {
     const isCancelled = result.error === "Booking tidak ditemukan.";
     const title = isCancelled ? "Pemesanan Dibatalkan" : "Pemesanan Tidak Ditemukan";

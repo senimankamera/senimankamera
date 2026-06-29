@@ -3,6 +3,7 @@ import { BookingRepository } from "../repositories/booking.repository";
 import { PackageRepository } from "../repositories/package.repository";
 import { InitiateBookingDraftSchema, InitiateBookingDraftInputType } from "../schemas/booking-draft.schema";
 import { DokuService } from "@/src/infrastructure/doku/doku.service";
+import { generateBookingCode } from "@/lib/utils";
 import crypto from "crypto";
 
 function addMinutesToTime(timeStr: string, minutes: number): string {
@@ -124,7 +125,7 @@ export class InitiateBookingDraftUseCase {
       bookingType === "TIME_BASED" ? DP_FLAT_TIME_BASED : totalAmountIdr * 0.2;
 
     // Generate a booking ID (this will be the invoice_number for DOKU)
-    const tempOrderId = crypto.randomUUID();
+    const tempOrderId = generateBookingCode(targetPackage?.category?.code, targetPackage?.code);
 
     // Call DOKU Service to generate a Checkout payment URL
     const dokuService = new DokuService();

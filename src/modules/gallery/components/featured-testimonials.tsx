@@ -64,7 +64,6 @@ export function FeaturedTestimonials({ items }: { items: TestimonialItem[] }) {
       behavior: "smooth",
     });
 
-    // Reset the programmatic scroll flag after transition is complete
     const timeoutId = setTimeout(() => {
       isProgrammaticScrollRef.current = false;
     }, 800);
@@ -106,7 +105,6 @@ export function FeaturedTestimonials({ items }: { items: TestimonialItem[] }) {
   };
 
   const handleScroll = () => {
-    // Skip scroll detection if programmatically scrolling
     if (isProgrammaticScrollRef.current) return;
     
     if (!scrollContainerRef.current) return;
@@ -115,7 +113,7 @@ export function FeaturedTestimonials({ items }: { items: TestimonialItem[] }) {
     if (!firstChild) return;
 
     const scrollLeft = container.scrollLeft;
-    const itemWidth = firstChild.getBoundingClientRect().width + 32; // item width + gap-8
+    const itemWidth = firstChild.getBoundingClientRect().width + 32;
 
     const index = Math.round(scrollLeft / itemWidth);
     const clampedIndex = Math.min(Math.max(0, index), maxIndex);
@@ -131,28 +129,36 @@ export function FeaturedTestimonials({ items }: { items: TestimonialItem[] }) {
 
   return (
     <div className="relative w-full overflow-hidden">
-      {/* Slides Container */}
+      {/* Slides Container - using items-start so card heights fit their own content */}
       <div 
         ref={scrollContainerRef}
         onScroll={handleScroll}
         onTouchStart={resetTimer}
         onMouseDown={resetTimer}
-        className="flex gap-8 overflow-x-auto snap-x snap-mandatory scroll-smooth full-bleed-carousel py-4 pb-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="flex items-start gap-8 overflow-x-auto snap-x snap-mandatory scroll-smooth full-bleed-carousel py-6 pb-12 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((item, index) => {
-          const isOddIndex = index % 2 === 1;
+          // Asymmetrical staggered offsets for organic, floating editorial feel
+          const staggeredOffsets = [
+            "lg:mt-0",
+            "lg:mt-12",
+            "lg:mt-6",
+            "lg:mt-16",
+            "lg:mt-4",
+          ];
+          const offsetClass = staggeredOffsets[index % staggeredOffsets.length];
 
           return (
             <div
               key={item.id}
               onClick={resetTimer}
               className={cn(
-                "flex-shrink-0 group cursor-pointer select-none px-4 snap-start transition-transform duration-300 flex",
+                "flex-shrink-0 group cursor-pointer select-none px-2 snap-start transition-all duration-500 self-start",
                 "w-[82vw] sm:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]",
-                isOddIndex && "lg:mt-12"
+                offsetClass
               )}
             >
-              <div className="relative overflow-hidden border border-white/40 bg-card/20 backdrop-blur-sm p-6 md:p-8 flex flex-col justify-between rounded-none w-full hover:border-primary/30 transition-all duration-500 shadow-sm text-center">
+              <div className="relative overflow-hidden border border-white/40 bg-card/20 backdrop-blur-sm p-6 md:p-8 flex flex-col justify-start rounded-none w-full hover:border-primary/40 transition-all duration-500 shadow-sm text-center h-auto">
                 {/* Blurred Profile Photo Background */}
                 {item.avatarUrl ? (
                   <div
@@ -166,9 +172,9 @@ export function FeaturedTestimonials({ items }: { items: TestimonialItem[] }) {
                 {/* Subtle vignette inner overlay */}
                 <div className="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-card/5 to-card/50 opacity-40 pointer-events-none" />
 
-                <div className="w-full relative z-10 flex flex-col justify-between h-full">
+                <div className="w-full relative z-10 flex flex-col h-auto">
                   {/* Client Info Block - Centered at the top */}
-                  <div className="flex flex-col items-center gap-3 pb-5 border-b border-border/10 mb-5">
+                  <div className="flex flex-col items-center gap-3 pb-5 border-b border-border/15 mb-5">
                     <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-100/80 border border-border/40 flex-shrink-0 flex items-center justify-center transition-transform duration-500 group-hover:scale-105 shadow-sm relative">
                       {item.avatarUrl ? (
                         <Image
@@ -194,9 +200,9 @@ export function FeaturedTestimonials({ items }: { items: TestimonialItem[] }) {
                     </div>
                   </div>
 
-                  {/* Content block below inside glassmorphic wrapper */}
-                  <div className="bg-card/85 backdrop-blur-md border border-border/20 p-5 rounded-none shadow-sm text-center">
-                    <p className="font-sans text-xs sm:text-sm text-secondary italic leading-relaxed">
+                  {/* Content block below - scrollable without scrollbar if long */}
+                  <div className="bg-card/85 backdrop-blur-md border border-border/20 p-5 rounded-none shadow-sm text-center h-auto max-h-[220px] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                    <p className="font-sans text-xs sm:text-sm text-secondary italic leading-relaxed break-words">
                       "{item.content}"
                     </p>
                   </div>
@@ -209,7 +215,7 @@ export function FeaturedTestimonials({ items }: { items: TestimonialItem[] }) {
 
       {/* Navigation Controls (Dots & Arrows) */}
       {maxIndex > 0 && (
-        <div className="max-w-[1440px] mx-auto px-6 md:px-20 mt-12 flex justify-between items-center">
+        <div className="max-w-[1440px] mx-auto px-6 md:px-20 mt-8 flex justify-between items-center">
           {/* Dots Indicators */}
           <div className="flex gap-2">
             {Array.from({ length: slidePositionsCount }).map((_, idx) => (

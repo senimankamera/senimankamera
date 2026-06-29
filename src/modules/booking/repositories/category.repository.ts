@@ -38,6 +38,7 @@ export class CategoryRepository {
   async create(data: {
     name: string;
     label: string;
+    code?: string;
     description?: string;
     order?: number;
     bookingType?: string;
@@ -52,6 +53,7 @@ export class CategoryRepository {
     data: {
       name?: string;
       label?: string;
+      code?: string;
       description?: string | null;
       order?: number;
       bookingType?: string;

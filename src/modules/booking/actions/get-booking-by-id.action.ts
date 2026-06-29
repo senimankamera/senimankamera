@@ -15,46 +15,36 @@ export async function getBookingByIdAction(id: string) {
       const draft = await draftRepo.findDraftById(id);
 
       if (draft) {
-        if (process.env.NODE_ENV === "development") {
-          console.log(`[DEV ONLY] Simulating webhook: Confirming booking from draft for ID: ${id}`);
-          const confirmUseCase = new ConfirmBookingFromDraftUseCase(draftRepo);
-          const confirmedBooking = await confirmUseCase.execute(id);
-          if (confirmedBooking) {
-            booking = confirmedBooking;
+        // Confirm booking from draft as instant fallback
+        const confirmUseCase = new ConfirmBookingFromDraftUseCase(draftRepo);
+        booking = await confirmUseCase.execute(id);
 
-            // Trigger Telegram notification simulation on local dev
-            try {
-              const { TelegramService } = require("@/src/infrastructure/telegram/telegram.service");
-              const packageRepo = new (await import("@/src/modules/booking/repositories/package.repository")).PackageRepository();
-              const pkg = await packageRepo.findByNameOrCategory(booking.packageType);
-
-              const telegramService = new TelegramService();
-              await telegramService.sendBookingNotification({
-                fullName: booking.client.fullName,
-                email: booking.client.email,
-                phoneNumber: booking.client.phoneNumber || undefined,
-                instagram: booking.client.instagram || undefined,
-                categoryName: pkg?.category?.label || pkg?.category?.name || undefined,
-                packageType: booking.packageType,
-                bookingDate: booking.bookingDate,
-                eventTime: booking.eventTime || undefined,
-                eventName: booking.eventName || undefined,
-                eventLocation: booking.eventLocation || undefined,
-                notes: booking.notes || undefined,
-                dpAmount: booking.dpAmount || undefined,
-                totalAmount: booking.totalAmount || undefined,
-              });
-              console.log(`[DEV ONLY] Simulated Telegram notification sent for ID: ${id}`);
-            } catch (teleErr: any) {
-              console.error("[DEV ONLY] Failed to send simulated Telegram notification:", teleErr.message);
-            }
+        if (booking) {
+          // Send Telegram notification
+          try {
+            const { PackageRepository } = await import("../repositories/package.repository");
+            const packageRepo = new PackageRepository();
+            const pkg = await packageRepo.findByNameOrCategory(booking.packageType);
+            const { TelegramService } = await import("@/src/infrastructure/telegram/telegram.service");
+            const telegramService = new TelegramService();
+            await telegramService.sendBookingNotification({
+              fullName: booking.client.fullName,
+              email: booking.client.email,
+              phoneNumber: booking.client.phoneNumber || undefined,
+              instagram: booking.client.instagram || undefined,
+              categoryName: pkg?.category?.label || pkg?.category?.name || undefined,
+              packageType: booking.packageType,
+              bookingDate: booking.bookingDate,
+              eventTime: booking.eventTime || undefined,
+              eventName: booking.eventName || undefined,
+              eventLocation: booking.eventLocation || undefined,
+              notes: booking.notes || undefined,
+              dpAmount: booking.dpAmount || undefined,
+              totalAmount: booking.totalAmount || undefined,
+            });
+          } catch (e) {
+            console.error("Failed to send Telegram notification in success view fallback:", e);
           }
-        } else {
-          return {
-            success: false,
-            error: "Sedang memverifikasi pembayaran Anda. Halaman ini akan memuat ulang secara otomatis...",
-            isPendingWebhook: true,
-          };
         }
       }
     }

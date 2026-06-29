@@ -1,4 +1,5 @@
 import { prisma } from "@/src/infrastructure/prisma/client";
+import { generateBookingCode } from "@/lib/utils";
 
 // Helper: tambah menit ke string waktu "HH:MM"
 function addMinutesToTime(timeStr: string, minutes: number): string {
@@ -61,7 +62,7 @@ export class BookingRepository {
     return prisma.$transaction(async (tx: any) => {
       const booking = await tx.booking.create({
         data: {
-          id: data.id,
+          id: data.id || generateBookingCode(),
           clientId: client.id,
           packageType: data.packageType,
           bookingDate: data.bookingDate,
@@ -263,12 +264,29 @@ export class BookingRepository {
 
 
   async findBookingById(id: string) {
-    return prisma.booking.findUnique({
-      where: { id },
+    const cleanId = id.trim();
+    let booking = await prisma.booking.findUnique({
+      where: { id: cleanId },
       include: {
         client: true,
       },
     });
+
+    if (!booking) {
+      booking = await prisma.booking.findFirst({
+        where: {
+          id: {
+            equals: cleanId,
+            mode: "insensitive",
+          },
+        },
+        include: {
+          client: true,
+        },
+      });
+    }
+
+    return booking;
   }
 
   async findAllBookings(filters: { status?: string; month?: number; year?: number; search?: string }) {

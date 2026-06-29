@@ -1,16 +1,9 @@
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
+import { PublicLayoutWrapper } from "@/components/public-main-container";
 
 export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <>
-      <Header />
-      <main className="flex-1 pt-[88px]">{children}</main>
-      <Footer />
-    </>
-  );
+  return <PublicLayoutWrapper>{children}</PublicLayoutWrapper>;
 }

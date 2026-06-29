@@ -396,16 +396,16 @@ export function TestimonialManager({ initialTestimonials }: TestimonialManagerPr
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                 {filteredTestimonials.map((item) => (
                   <div
                     key={item.id}
-                    className="border border-white/40 bg-card/20 p-5 flex flex-col justify-between rounded-none hover:border-primary/30 transition-all duration-300 relative overflow-hidden group"
+                    className="border border-white/40 bg-card/20 backdrop-blur-sm p-6 flex flex-col justify-start rounded-none hover:border-primary/40 transition-all duration-500 shadow-sm relative overflow-hidden group h-auto self-start"
                   >
                     {/* Blurred Profile Photo Background */}
                     {item.avatarUrl ? (
                       <div
-                        className="absolute inset-0 z-0 bg-cover bg-center blur-[1px] opacity-35 scale-100 transition-transform duration-1000 group-hover:scale-105 pointer-events-none"
+                        className="absolute inset-0 z-0 bg-cover bg-center blur-[1px] opacity-45 scale-100 transition-transform duration-1000 group-hover:scale-105 pointer-events-none"
                         style={{ backgroundImage: `url("${item.avatarUrl}")` }}
                       />
                     ) : (
@@ -415,10 +415,34 @@ export function TestimonialManager({ initialTestimonials }: TestimonialManagerPr
                     {/* Subtle vignette inner overlay */}
                     <div className="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-card/5 to-card/50 opacity-40 pointer-events-none" />
 
-                    <div className="w-full relative z-10 flex flex-col justify-between h-full space-y-4">
+                    {/* Admin Quick Action Floating Buttons (Top Right) */}
+                    <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-card/90 backdrop-blur-md border border-border/30 p-1 shadow-sm">
+                      <Button
+                        onClick={() => handleStartEdit(item)}
+                        disabled={isPending}
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-blue-600 hover:bg-blue-50 hover:text-blue-700 cursor-pointer rounded-none"
+                        title="Edit Testimoni"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        onClick={() => handleDelete(item.id)}
+                        disabled={isPending}
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-red-700 hover:bg-red-50 hover:text-red-800 cursor-pointer rounded-none"
+                        title="Hapus Testimoni"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+
+                    <div className="w-full relative z-10 flex flex-col text-center h-auto pt-2">
                       {/* Client Info Block - Centered at the top */}
-                      <div className="flex items-center gap-3 pb-3 border-b border-border/10">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-200 border border-border flex-shrink-0 flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-3 pb-4 border-b border-border/15 mb-4">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-neutral-100/80 border border-border/40 flex-shrink-0 flex items-center justify-center shadow-sm">
                           {item.avatarUrl ? (
                             <img
                               src={item.avatarUrl}
@@ -434,45 +458,19 @@ export function TestimonialManager({ initialTestimonials }: TestimonialManagerPr
                             {item.name}
                           </h4>
                           {item.role && (
-                            <p className="text-[10px] text-secondary font-medium tracking-wide">
+                            <p className="text-[10px] text-secondary font-medium tracking-wide mt-0.5">
                               {item.role}
                             </p>
                           )}
                         </div>
                       </div>
 
-                      {/* Content block below inside glassmorphic wrapper */}
-                      <div className="bg-card/85 backdrop-blur-md border border-border/20 p-4 rounded-none shadow-sm text-left">
-                        <p className="font-sans text-xs italic text-secondary leading-relaxed relative pt-2">
-                          <span className="text-2xl font-serif text-border/20 absolute -left-2 -top-2 select-none">
-                            “
-                          </span>
+                      {/* Content block below - scrollable without scrollbar if long */}
+                      <div className="bg-card/85 backdrop-blur-md border border-border/20 p-4 rounded-none shadow-sm text-center h-auto max-h-[260px] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                        <p className="font-sans text-xs text-secondary italic leading-relaxed break-words">
                           "{item.content}"
                         </p>
                       </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-border/20 mt-4 flex justify-end gap-2 relative z-10">
-                      <Button
-                        onClick={() => handleStartEdit(item)}
-                        disabled={isPending}
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700 cursor-pointer"
-                        title="Edit Testimoni"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(item.id)}
-                        disabled={isPending}
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-700 hover:bg-red-50 hover:text-red-800 cursor-pointer"
-                        title="Hapus Testimoni"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
                     </div>
                   </div>
                 ))}

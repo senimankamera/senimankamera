@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 export async function createPackageAction(data: {
   name: string;
   categoryId: string;
+  code?: string;
   price: number;
   features: string[];
   description?: string;
@@ -47,6 +48,7 @@ export async function updatePackageAction(
   data: {
     name: string;
     categoryId: string;
+    code?: string;
     price: number;
     features: string[];
     description?: string;

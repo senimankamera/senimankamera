@@ -50,6 +50,7 @@ export class PackageRepository {
   async createPackage(data: {
     name: string;
     categoryId: string;
+    code?: string;
     price: number;
     features: string[];
     description?: string;
@@ -72,6 +73,7 @@ export class PackageRepository {
     data: {
       name?: string;
       categoryId?: string;
+      code?: string;
       price?: number;
       features?: string[];
       description?: string;

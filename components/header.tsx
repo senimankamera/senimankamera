@@ -26,6 +26,7 @@ export function Header() {
     { name: "Portofolio", href: "/portfolio" },
     { name: "Layanan", href: "/services" },
     { name: "Testimonial", href: "/testimonials" },
+    { name: "Lacak Pesanan", href: "/track" },
     { name: "Kontak", href: "/contact" },
   ];
 

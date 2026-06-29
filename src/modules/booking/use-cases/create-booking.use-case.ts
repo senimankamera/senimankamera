@@ -2,6 +2,7 @@ import { BookingRepository, CreateBookingInput } from "../repositories/booking.r
 import { PackageRepository } from "../repositories/package.repository";
 import { CreateBookingSchema, CreateBookingInputType } from "../schemas/create-booking.schema";
 import { DokuService } from "@/src/infrastructure/doku/doku.service";
+import { generateBookingCode } from "@/lib/utils";
 
 function addMinutesToTime(timeStr: string, minutes: number): string {
   const [hours, mins] = timeStr.split(":").map(Number);
@@ -112,8 +113,7 @@ export class CreateBookingUseCase {
       bookingType === "TIME_BASED" ? DP_FLAT_TIME_BASED : totalAmountIdr * 0.2;
 
     // Generate a booking ID
-    const crypto = require("crypto");
-    const tempOrderId = crypto.randomUUID();
+    const tempOrderId = generateBookingCode(targetPackage?.category?.code, targetPackage?.code);
 
     // Call DOKU Service to generate a Checkout payment URL
     const dokuService = new DokuService();
