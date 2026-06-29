@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, ShieldCheck, ExternalLink, XCircle, Clock, RefreshCw } from "lucide-react";
+import { Loader2, ShieldCheck, ExternalLink, XCircle, Clock, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getBookingByIdAction } from "../actions/get-booking-by-id.action";
 import { cancelDraftBookingAction } from "../actions/cancel-draft-booking.action";
+import { simulateDevPaymentAction } from "../actions/simulate-dev-payment.action";
 
 interface BookingPendingViewProps {
   orderId: string;
@@ -19,16 +20,19 @@ export function BookingPendingView({ orderId, paymentUrl }: BookingPendingViewPr
 
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isSimulatingDev, setIsSimulatingDev] = useState(false);
   const [draftInfo, setDraftInfo] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Otomatis buka halaman pembayaran DOKU saat komponen dimuat pertama kali
+  const isDevEnvironment = process.env.NODE_ENV !== "production";
+
+  // Otomatis arahkan ke halaman pembayaran DOKU di tab yang sama saat pertama kali dimuat
   useEffect(() => {
     if (activePaymentUrl) {
       const hasOpened = sessionStorage.getItem(`doku_opened_${orderId}`);
       if (!hasOpened) {
         sessionStorage.setItem(`doku_opened_${orderId}`, "true");
-        window.open(activePaymentUrl, "_blank");
+        window.location.href = activePaymentUrl;
       }
     }
   }, [activePaymentUrl, orderId]);
@@ -71,7 +75,7 @@ export function BookingPendingView({ orderId, paymentUrl }: BookingPendingViewPr
 
   const handleOpenPaymentUrl = () => {
     if (activePaymentUrl) {
-      window.open(activePaymentUrl, "_blank");
+      window.location.href = activePaymentUrl;
     }
   };
 
@@ -86,6 +90,22 @@ export function BookingPendingView({ orderId, paymentUrl }: BookingPendingViewPr
         setErrorMessage(err.message || "Gagal membatalkan pesanan.");
         setIsCancelling(false);
       }
+    }
+  };
+
+  const handleSimulateDevPayment = async () => {
+    setIsSimulatingDev(true);
+    try {
+      const res = await simulateDevPaymentAction(orderId);
+      if (res.success) {
+        router.push(`/book/success?order_id=${orderId}`);
+      } else {
+        setErrorMessage(res.error || "Gagal mensimulasikan pembayaran.");
+        setIsSimulatingDev(false);
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || "Terjadi kesalahan saat simulasi.");
+      setIsSimulatingDev(false);
     }
   };
 
@@ -160,11 +180,41 @@ export function BookingPendingView({ orderId, paymentUrl }: BookingPendingViewPr
             </Button>
           )}
 
+          {/* Dev-Only Helper Button */}
+          {isDevEnvironment && (
+            <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-left space-y-2 rounded-none">
+              <span className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400 block tracking-wider">
+                🛠️ Mode Pengujian Lokal (Development)
+              </span>
+              <p className="text-[11px] text-secondary/80 leading-normal">
+                Karena simulator DOKU tidak dapat menembak webhook ke localhost, klik tombol di bawah ini untuk mensimulasikan penerimaan webhook SUCCESS & pengiriman Telegram Notifikasi secara resmi:
+              </p>
+              <Button
+                type="button"
+                onClick={handleSimulateDevPayment}
+                disabled={isSimulatingDev}
+                className="w-full font-sans text-xs uppercase tracking-widest py-4 rounded-none font-bold text-amber-950 bg-amber-400 hover:bg-amber-300 cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isSimulatingDev ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Mensimulasikan Webhook DOKU...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>[DEV] Simulasi Pembayaran Sukses DOKU</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
           <Button
             type="button"
             variant="outline"
             onClick={handleCancelBooking}
-            disabled={isCancelling}
+            disabled={isCancelling || isSimulatingDev}
             className="w-full font-sans text-xs uppercase tracking-widest py-6 rounded-none border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800 cursor-pointer flex items-center justify-center gap-2 font-semibold"
           >
             {isCancelling ? (
