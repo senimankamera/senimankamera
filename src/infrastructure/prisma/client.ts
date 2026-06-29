@@ -20,12 +20,18 @@ if (process.env.NODE_ENV !== "production" && globalForPrisma.connectionString !=
   globalForPrisma.connectionString = connectionString;
 }
 
+const sslConfig =
+  connectionString?.includes("localhost") || connectionString?.includes("127.0.0.1")
+    ? false
+    : { rejectUnauthorized: false };
+
 // Re-use pg Pool in development to prevent dangling database connection leaks on Fast Refresh
 let pool: pg.Pool;
 if (process.env.NODE_ENV !== "production") {
   if (!globalForPrisma.pool) {
     globalForPrisma.pool = new pg.Pool({ 
       connectionString,
+      ssl: sslConfig,
       max: 2, // Limit local pool size to prevent connection exhaustion
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
@@ -35,6 +41,7 @@ if (process.env.NODE_ENV !== "production") {
 } else {
   pool = new pg.Pool({ 
     connectionString,
+    ssl: sslConfig,
     max: 2, // Limit serverless function pool size in production
     idleTimeoutMillis: 10000, // Release connections quickly on Vercel
     connectionTimeoutMillis: 10000,
