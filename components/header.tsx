@@ -7,6 +7,7 @@ import { Menu, X, Calendar } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PublicCalendarModal } from "@/src/modules/booking/components/public-calendar-modal";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
 export function Header() {
   const pathname = usePathname();
@@ -110,27 +111,8 @@ export function Header() {
             </Link>
           </div>
 
-          {/* Action Stack: Equal Width Solid Box (Mobile) */}
-          <div className="md:hidden flex flex-col items-stretch w-[108px] gap-0.5">
-            <button
-              type="button"
-              onClick={() => setIsCalendarOpen(true)}
-              className="w-full justify-center font-sans text-[8px] uppercase tracking-wider font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 py-0.5 rounded-none transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap leading-none"
-            >
-              <Calendar className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span>Cek Jadwal</span>
-            </button>
-
-            <Link
-              href="/services"
-              className={cn(
-                buttonVariants({ variant: "default", size: "sm" }),
-                "w-full justify-center font-sans text-[9px] uppercase tracking-wider px-1 py-1.5 rounded-none font-bold whitespace-nowrap leading-none h-auto text-center"
-              )}
-            >
-              Booking Sekarang
-            </Link>
-          </div>
+          {/* Spacer for Mobile to balance Hamburger menu (Desktop unchanged) */}
+          <div className="w-6 md:hidden" aria-hidden="true" />
         </div>
       </nav>
 
@@ -194,6 +176,9 @@ export function Header() {
           </div>
         </div>
       )}
+
+      {/* Mobile Bottom Navigation Bar (Dock) */}
+      <MobileBottomNav onOpenCalendar={() => setIsCalendarOpen(true)} />
 
       {/* Public Calendar Modal */}
       <PublicCalendarModal

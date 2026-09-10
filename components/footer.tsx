@@ -3,7 +3,7 @@ import { FileText, ShieldCheck } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="relative z-10 bg-background border-t border-border/40 py-20 px-6 md:px-20 mt-auto">
+    <footer className="relative z-10 bg-background border-t border-border/40 pt-20 pb-28 md:py-20 px-6 md:px-20 mt-auto">
       <div className="max-w-[1440px] mx-auto flex flex-col items-center gap-8 text-center">
         {/* Brand Name */}
         <Link href="/" className="font-serif text-3xl font-semibold tracking-tighter text-primary">
