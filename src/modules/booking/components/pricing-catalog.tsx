@@ -246,17 +246,21 @@ export function PricingCatalog({ initialPackages, categories }: PricingCatalogPr
                         <Button
                           render={<Link href={`/book?package=${encodeURIComponent(pkg.name)}&categoryId=${encodeURIComponent(pkg.categoryId)}`} />}
                           nativeButton={false}
+                          size="lg"
                           style={buttonStyle}
                           className={cn(
-                            "w-full font-sans text-[10px] md:text-xs uppercase tracking-widest py-4 md:py-5 rounded-none mt-auto cursor-pointer relative z-10",
+                            "w-full mt-auto cursor-pointer relative z-10 font-medium h-auto min-h-11 py-2.5 px-4 whitespace-normal text-center leading-snug",
                             !isCustomButtonColor && (
                               isLightText
                                 ? "bg-white text-black hover:bg-neutral-200"
-                                : "bg-primary text-white hover:opacity-90"
+                                : "bg-primary text-primary-foreground hover:opacity-90"
                             )
                           )}
                         >
-                          Pesan Sesi {pkg.name}
+                          <span className="flex flex-col items-center justify-center text-center leading-snug">
+                            <span className="text-xs font-normal opacity-90">Pesan Sesi</span>
+                            <span className="font-semibold text-xs sm:text-sm">{pkg.name}</span>
+                          </span>
                         </Button>
                       </div>
                     );

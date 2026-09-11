@@ -177,9 +177,10 @@ export function StepPembayaran({
         <Button
           type="button"
           variant="outline"
+          size="lg"
           onClick={onBack}
           disabled={isPending}
-          className="font-sans text-xs uppercase tracking-widest py-5 px-8 rounded-none border-border order-2 sm:order-1"
+          className="order-2 sm:order-1 font-medium"
         >
           ← Kembali
         </Button>
@@ -188,18 +189,20 @@ export function StepPembayaran({
             <Button
               type="button"
               variant="ghost"
+              size="lg"
               onClick={onCancelPayment}
               disabled={isPending}
-              className="font-sans text-xs uppercase tracking-widest py-5 px-6 rounded-none text-red-700 hover:text-red-800 hover:bg-red-50 border border-transparent hover:border-red-200 cursor-pointer font-semibold"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 font-medium"
             >
               Ganti Metode Pembayaran
             </Button>
           )}
           <Button
             type="button"
+            size="lg"
             onClick={onSubmit}
             disabled={isPending}
-            className="font-sans text-xs uppercase tracking-widest py-5 px-10 rounded-none font-bold text-white transition-all hover:opacity-90 cursor-pointer flex items-center gap-2"
+            className="flex items-center gap-2 font-medium"
           >
             {isPending ? "Memproses Pemesanan..." : (isPayRetry ? "Bayar Sekarang" : "Konfirmasi & Lanjutkan")}
           </Button>

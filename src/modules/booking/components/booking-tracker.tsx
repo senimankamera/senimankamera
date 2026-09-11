@@ -151,8 +151,9 @@ export function BookingTracker({ initialBookingId = "", initialEmail = "" }: Boo
 
           <Button
             type="submit"
+            size="lg"
             disabled={isPending}
-            className="w-full md:w-auto uppercase tracking-widest py-6 px-8 rounded-none font-bold text-white bg-primary hover:opacity-90 cursor-pointer text-xs flex items-center justify-center gap-2 mt-2"
+            className="w-full md:w-auto font-medium flex items-center justify-center gap-2 mt-2"
           >
             {isPending ? (
               <span>Memeriksa Data...</span>

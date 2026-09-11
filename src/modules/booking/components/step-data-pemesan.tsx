@@ -242,14 +242,16 @@ export function StepDataPemesan({
           <Button
             type="button"
             variant="outline"
+            size="lg"
             onClick={onBack}
-            className="font-sans text-xs uppercase tracking-widest py-5 px-8 rounded-none border-border order-2 sm:order-1 w-full sm:w-auto"
+            className="order-2 sm:order-1 w-full sm:w-auto font-medium"
           >
             ← Kembali
           </Button>
           <Button
             type="submit"
-            className="font-sans text-xs uppercase tracking-widest py-5 px-10 rounded-none font-bold text-white transition-all hover:opacity-90 cursor-pointer order-1 sm:order-2 w-full sm:w-auto"
+            size="lg"
+            className="order-1 sm:order-2 w-full sm:w-auto font-medium"
           >
             Lanjut ke Pembayaran →
           </Button>

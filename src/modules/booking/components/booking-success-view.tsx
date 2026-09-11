@@ -175,11 +175,12 @@ export function BookingSuccessView({ booking }: BookingSuccessViewProps) {
         <BookingReceiptDownload booking={booking} />
         <Button 
           onClick={handleWaClick}
+          size="lg"
           className={cn(
-            "rounded-none font-sans text-[10px] uppercase tracking-widest py-6 text-white w-full flex items-center justify-center gap-2 cursor-pointer font-bold transition-all duration-300",
+            "w-full flex items-center justify-center gap-2 cursor-pointer font-medium transition-all duration-300",
             (booking.status === "PENDING" || booking.status === "APPROVED" || booking.status === "LUNAS")
-              ? "bg-red-600 hover:bg-red-700 shadow-lg animate-pulse"
-              : "bg-primary hover:opacity-90"
+              ? "bg-red-600 hover:bg-red-700 shadow-lg animate-pulse text-white"
+              : "bg-primary hover:opacity-90 text-primary-foreground"
           )}
         >
           Hubungi via WhatsApp Owner (WAJIB)
@@ -191,8 +192,9 @@ export function BookingSuccessView({ booking }: BookingSuccessViewProps) {
             onClick={() => router.push(`/track?code=${booking.id}`)}
             disabled={!hasClickedWa}
             variant="outline"
+            size="lg"
             className={cn(
-              "rounded-none font-sans text-[10px] uppercase tracking-widest py-5 border-border flex-1 flex items-center justify-center gap-2 transition-all duration-300 font-bold",
+              "flex-1 flex items-center justify-center gap-2 transition-all duration-300 font-medium",
               hasClickedWa
                 ? "border-primary text-primary hover:bg-neutral-100 cursor-pointer shadow-sm"
                 : "opacity-50 cursor-not-allowed bg-muted/30 text-secondary"
@@ -207,10 +209,11 @@ export function BookingSuccessView({ booking }: BookingSuccessViewProps) {
             onClick={() => router.push("/")}
             disabled={!hasClickedWa}
             variant={hasClickedWa ? "default" : "outline"}
+            size="lg"
             className={cn(
-              "rounded-none font-sans text-[10px] uppercase tracking-widest py-5 flex-1 flex items-center justify-center gap-2 transition-all duration-300 font-bold",
+              "flex-1 flex items-center justify-center gap-2 transition-all duration-300 font-medium",
               hasClickedWa
-                ? "bg-primary text-white hover:opacity-90 cursor-pointer shadow-sm"
+                ? "cursor-pointer shadow-sm"
                 : "opacity-50 cursor-not-allowed text-secondary bg-muted/20 border-border"
             )}
             title={!hasClickedWa ? "Klik WhatsApp Konfirmasi untuk membuka kunci" : ""}

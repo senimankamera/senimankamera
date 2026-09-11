@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { FloatingBookingButton } from "@/components/floating-booking-button";
 
 export function PublicLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -14,6 +15,7 @@ export function PublicLayoutWrapper({ children }: { children: React.ReactNode })
       <main className={`flex-1 ${isSuccessPage ? "pt-0" : "pt-[88px]"}`}>
         {children}
       </main>
+      {!isSuccessPage && <FloatingBookingButton />}
       {!isSuccessPage && <Footer />}
     </>
   );

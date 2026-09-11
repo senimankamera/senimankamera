@@ -347,11 +347,12 @@ export function StepPilihPaket({
                       <Button
                         type="button"
                         style={buttonStyle}
+                        size="sm"
                         className={cn(
-                          "w-full font-sans text-[10px] uppercase tracking-widest py-4 rounded-none mt-auto cursor-pointer relative z-10",
+                          "w-full mt-auto cursor-pointer relative z-10",
                           !isCustomButtonColor && (
                             isSelected
-                              ? "bg-primary text-white"
+                              ? "bg-primary text-primary-foreground"
                               : isLightText
                                 ? "bg-white text-black hover:bg-neutral-200"
                                 : "bg-transparent text-primary border border-border/40 hover:bg-muted"
@@ -374,8 +375,9 @@ export function StepPilihPaket({
         <div className="flex justify-end pt-4 border-t border-border/20">
           <Button
             type="button"
+            size="lg"
             onClick={onNext}
-            className="font-sans text-xs uppercase tracking-widest py-5 px-10 rounded-none font-bold text-white transition-all hover:opacity-90 cursor-pointer w-full sm:w-auto"
+            className="w-full sm:w-auto font-medium"
           >
             Lanjut ke Tanggal & Waktu →
           </Button>

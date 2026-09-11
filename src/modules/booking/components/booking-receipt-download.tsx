@@ -123,7 +123,8 @@ export function BookingReceiptDownload({ booking }: BookingReceiptDownloadProps)
             onClick={handleDownloadPdf}
             disabled={isGeneratingPdf}
             variant="outline"
-            className="rounded-none font-sans text-[10px] uppercase tracking-widest py-5 border-border text-primary hover:bg-neutral-100 flex items-center justify-center gap-2 cursor-pointer font-bold w-full"
+            size="lg"
+            className="w-full flex items-center justify-center gap-2 font-medium"
           >
             {isGeneratingPdf ? (
               <Loader2 className="w-4 h-4 animate-spin text-primary" />
@@ -138,7 +139,8 @@ export function BookingReceiptDownload({ booking }: BookingReceiptDownloadProps)
             onClick={handleDownloadImage}
             disabled={isGeneratingImage}
             variant="outline"
-            className="rounded-none font-sans text-[10px] uppercase tracking-widest py-5 border-border text-primary hover:bg-neutral-100 flex items-center justify-center gap-2 cursor-pointer font-bold w-full"
+            size="lg"
+            className="w-full flex items-center justify-center gap-2 font-medium"
           >
             {isGeneratingImage ? (
               <Loader2 className="w-4 h-4 animate-spin text-primary" />

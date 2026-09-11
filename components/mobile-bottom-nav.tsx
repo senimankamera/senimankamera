@@ -2,100 +2,88 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Camera, Calendar, LayoutGrid, Send } from "lucide-react";
+import { Home, Camera, Calendar, LayoutGrid, Search, Send } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MobileBottomNavProps {
-  onOpenCalendar: () => void;
+  onOpenCalendar?: () => void;
 }
 
 export function MobileBottomNav({ onOpenCalendar }: MobileBottomNavProps) {
   const pathname = usePathname();
 
-  const isHomeActive = pathname === "/";
-  const isServicesActive = pathname.startsWith("/services");
-  const isGalleryActive = pathname.startsWith("/portfolio");
-  const isBookingActive = pathname.startsWith("/book");
+  const navItems = [
+    {
+      name: "Beranda",
+      href: "/",
+      icon: Home,
+      isActive: pathname === "/",
+    },
+    {
+      name: "Galeri",
+      href: "/portfolio",
+      icon: LayoutGrid,
+      isActive: pathname.startsWith("/portfolio"),
+    },
+    {
+      name: "Jadwal",
+      href: "/schedule",
+      icon: Calendar,
+      isActive: pathname.startsWith("/schedule"),
+    },
+    {
+      name: "Layanan",
+      href: "/services",
+      icon: Camera,
+      isActive: pathname.startsWith("/services"),
+    },
+    {
+      name: "Lacak",
+      href: "/track",
+      icon: Search,
+      isActive: pathname.startsWith("/track"),
+    },
+    {
+      name: "Booking",
+      href: "/book",
+      icon: Send,
+      isActive: pathname.startsWith("/book"),
+    },
+  ];
 
   return (
     <nav
       aria-label="Navigasi Mobile"
       className="fixed bottom-3 inset-x-3 z-50 pb-[env(safe-area-inset-bottom,0px)] md:hidden pointer-events-none"
     >
-      <div className="max-w-md mx-auto bg-card/90 backdrop-blur-xl border border-border/50 rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.08)] px-2 py-1.5 flex items-center justify-between pointer-events-auto">
-        {/* 1. Beranda */}
-        <Link
-          href="/"
-          className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] flex-1 transition-colors ${
-            isHomeActive
-              ? "text-primary font-bold"
-              : "text-muted-foreground hover:text-foreground font-medium"
-          }`}
-        >
-          <Home className="w-5 h-5" />
-          <span className="text-[10px] tracking-wider uppercase mt-0.5">
-            Beranda
-          </span>
-        </Link>
+      <div className="max-w-lg mx-auto bg-card/90 backdrop-blur-xl border border-border/50 rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.12)] p-1.5 flex items-center justify-between gap-1 pointer-events-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = item.isActive;
 
-        {/* 2. Layanan */}
-        <Link
-          href="/services"
-          className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] flex-1 transition-colors ${
-            isServicesActive
-              ? "text-primary font-bold"
-              : "text-muted-foreground hover:text-foreground font-medium"
-          }`}
-        >
-          <Camera className="w-5 h-5" />
-          <span className="text-[10px] tracking-wider uppercase mt-0.5">
-            Layanan
-          </span>
-        </Link>
-
-        {/* 3. Cek Jadwal (Elevated Center Button) */}
-        <button
-          type="button"
-          onClick={onOpenCalendar}
-          className="-my-3 flex flex-col items-center justify-center focus:outline-none group px-1"
-          aria-label="Cek Ketersediaan Jadwal"
-        >
-          <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-[0_2px_12px_rgba(0,0,0,0.2)] group-hover:opacity-90 active:scale-95 transition-all">
-            <Calendar className="w-5 h-5" />
-          </div>
-          <span className="text-[9px] tracking-wider uppercase font-bold text-foreground mt-1">
-            Jadwal
-          </span>
-        </button>
-
-        {/* 4. Galeri */}
-        <Link
-          href="/portfolio"
-          className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] flex-1 transition-colors ${
-            isGalleryActive
-              ? "text-primary font-bold"
-              : "text-muted-foreground hover:text-foreground font-medium"
-          }`}
-        >
-          <LayoutGrid className="w-5 h-5" />
-          <span className="text-[10px] tracking-wider uppercase mt-0.5">
-            Galeri
-          </span>
-        </Link>
-
-        {/* 5. Booking */}
-        <Link
-          href="/book"
-          className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] flex-1 transition-colors ${
-            isBookingActive
-              ? "text-primary font-bold"
-              : "text-muted-foreground hover:text-foreground font-medium"
-          }`}
-        >
-          <Send className="w-5 h-5" />
-          <span className="text-[10px] tracking-wider uppercase mt-0.5">
-            Booking
-          </span>
-        </Link>
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
+                "flex flex-col items-center justify-center min-w-[40px] py-1.5 px-1 rounded-full flex-1 transition-all duration-200 active:scale-90 select-none",
+                active
+                  ? "bg-foreground/10 text-foreground font-bold shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]"
+                  : "text-muted-foreground/75 hover:text-foreground hover:bg-foreground/5 font-medium"
+              )}
+            >
+              <Icon
+                className={cn(
+                  "w-[18px] h-[18px] transition-all duration-200",
+                  active ? "stroke-[2.3] scale-105 text-primary" : "stroke-[1.75]"
+                )}
+              />
+              <span className="text-[9px] tracking-wider uppercase mt-0.5 leading-none">
+                {item.name}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );

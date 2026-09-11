@@ -3,17 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X, Calendar } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PublicCalendarModal } from "@/src/modules/booking/components/public-calendar-modal";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
 export function Header() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,6 +25,7 @@ export function Header() {
   const navLinks = [
     { name: "Beranda", href: "/" },
     { name: "Portofolio", href: "/portfolio" },
+    { name: "Jadwal", href: "/schedule" },
     { name: "Layanan", href: "/services" },
     { name: "Informasi Harga", href: "/pricing" },
     { name: "Lacak Pesanan", href: "/track" },
@@ -89,28 +88,6 @@ export function Header() {
             })}
           </div>
 
-          {/* Action Stack: Equal Width Solid Box (Desktop) */}
-          <div className="hidden md:flex flex-col items-stretch w-[190px] gap-1">
-            <button
-              type="button"
-              onClick={() => setIsCalendarOpen(true)}
-              className="w-full justify-center font-sans text-[10px] uppercase tracking-[0.06em] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 py-1 rounded-none transition-all flex items-center gap-1 cursor-pointer leading-none"
-            >
-              <Calendar className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span className="whitespace-nowrap">Cek Ketersediaan Jadwal</span>
-            </button>
-
-            <Link
-              href="/services"
-              className={cn(
-                buttonVariants({ variant: "default" }),
-                "w-full justify-center font-sans text-[11px] uppercase tracking-[0.15em] py-2 rounded-none h-auto leading-none text-center"
-              )}
-            >
-              Booking Sekarang
-            </Link>
-          </div>
-
           {/* Spacer for Mobile to balance Hamburger menu (Desktop unchanged) */}
           <div className="w-6 md:hidden" aria-hidden="true" />
         </div>
@@ -149,26 +126,14 @@ export function Header() {
                 {link.name}
               </Link>
             ))}
-
-            {/* Extra Cek Jadwal option in Mobile Drawer */}
-            <button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                setIsCalendarOpen(true);
-              }}
-              className="py-2 border-b border-border/40 text-left text-amber-600 dark:text-amber-400 font-bold flex items-center gap-2 cursor-pointer uppercase text-lg"
-            >
-              <Calendar className="w-5 h-5" />
-              <span>Cek Ketersediaan Jadwal</span>
-            </button>
           </div>
           <div className="mt-auto">
             <Link
               href="/services"
               onClick={() => setIsMobileMenuOpen(false)}
               className={cn(
-                buttonVariants({ variant: "default" }),
-                "w-full font-sans text-xs uppercase tracking-[0.15em] py-6 rounded-none text-center"
+                buttonVariants({ variant: "default", size: "lg" }),
+                "w-full text-center font-medium py-6"
               )}
             >
               Booking Sekarang
@@ -178,13 +143,7 @@ export function Header() {
       )}
 
       {/* Mobile Bottom Navigation Bar (Dock) */}
-      <MobileBottomNav onOpenCalendar={() => setIsCalendarOpen(true)} />
-
-      {/* Public Calendar Modal */}
-      <PublicCalendarModal
-        isOpen={isCalendarOpen}
-        onClose={() => setIsCalendarOpen(false)}
-      />
+      <MobileBottomNav />
     </>
   );
 }
