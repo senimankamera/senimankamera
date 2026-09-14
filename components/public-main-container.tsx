@@ -12,7 +12,7 @@ export function PublicLayoutWrapper({ children }: { children: React.ReactNode })
   return (
     <>
       {!isSuccessPage && <Header />}
-      <main className={`flex-1 ${isSuccessPage ? "pt-0" : "pt-[88px]"}`}>
+      <main className={`flex-1 ${isSuccessPage ? "pt-0" : "pt-14 md:pt-16"}`}>
         {children}
       </main>
       {!isSuccessPage && <FloatingBookingButton />}

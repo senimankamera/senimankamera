@@ -5,9 +5,13 @@ export function Footer() {
   return (
     <footer className="relative z-10 bg-background border-t border-border/40 pt-20 pb-28 md:py-20 px-6 md:px-20 mt-auto">
       <div className="max-w-[1440px] mx-auto flex flex-col items-center gap-8 text-center">
-        {/* Brand Name */}
-        <Link href="/" className="font-serif text-3xl font-semibold tracking-tighter text-primary">
-          SENIMAN_KAMERA
+        {/* Brand Logo */}
+        <Link href="/" className="inline-block transition-opacity hover:opacity-85">
+          <img
+            src="/logo.png"
+            alt="SENIMAN_KAMERA"
+            className="h-10 md:h-12 w-auto object-contain mx-auto"
+          />
         </Link>
 
         {/* Owner Profile (Clean Borderless Layout) */}

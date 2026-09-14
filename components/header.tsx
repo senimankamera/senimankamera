@@ -40,13 +40,13 @@ export function Header() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 backdrop-blur-md ${
+        className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-300 backdrop-blur-md flex items-center ${
           isScrolled
-            ? "bg-background/95 border-border py-2 shadow-sm"
-            : "bg-background/70 border-transparent py-2.5"
+            ? "h-12 md:h-14 bg-background/95 border-border shadow-sm"
+            : "h-14 md:h-16 bg-background/90 border-border/40"
         }`}
       >
-        <div className="flex justify-between items-center px-6 md:px-20 w-full max-w-[1440px] mx-auto">
+        <div className="flex items-center justify-between px-4 sm:px-6 md:px-4 lg:px-8 xl:px-12 w-full max-w-[1440px] mx-auto">
           {/* Mobile Menu Toggle */}
           <button
             aria-label="Toggle Menu"
@@ -56,39 +56,65 @@ export function Header() {
             <Menu className="w-6 h-6" />
           </button>
 
-          {/* Brand Logo */}
-          <Link
-            href="/"
-            className="font-serif text-2xl md:text-3xl tracking-tighter text-primary flex items-center gap-3"
-          >
-            <img
-              src="/logo.png"
-              alt="SENIMAN_KAMERA"
-              className="h-7 md:h-8 w-auto object-contain"
-            />
-          </Link>
+          {/* Brand Logo (Left) */}
+          <div className="flex items-center shrink-0 w-auto md:w-[80px] lg:w-[120px] xl:w-[150px]">
+            <Link
+              href="/"
+              className="font-serif text-2xl md:text-3xl tracking-tighter text-primary flex items-center gap-3"
+            >
+              <img
+                src="/logo.png"
+                alt="SENIMAN_KAMERA"
+                className={`w-auto object-contain transition-all duration-300 ${
+                  isScrolled ? "h-6 md:h-7" : "h-7 md:h-8"
+                }`}
+              />
+            </Link>
+          </div>
 
-          {/* Navigation Links (Desktop) */}
-          <div className="hidden md:flex items-center gap-8 font-sans text-xs tracking-[0.15em] uppercase font-bold">
+          {/* Navigation Links (Desktop Centered) */}
+          <div
+            className={`hidden md:flex items-center justify-center flex-1 mx-1 lg:mx-4 gap-2 md:gap-3 lg:gap-5 xl:gap-7 font-sans uppercase font-bold transition-all duration-300 ${
+              isScrolled
+                ? "text-[10px] md:text-[10.5px] lg:text-xs tracking-[0.06em] md:tracking-[0.06em] lg:tracking-[0.1em] xl:tracking-[0.12em]"
+                : "text-[11px] md:text-[11.5px] lg:text-xs xl:text-[13px] tracking-[0.08em] md:tracking-[0.08em] lg:tracking-[0.12em] xl:tracking-[0.15em]"
+            }`}
+          >
             {navLinks.map((link) => {
               const active = isActive(link.href);
+              const words = link.name.split(" ");
+              const isMultiWord = words.length > 1;
+
               return (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`py-1 transition-all duration-300 hover:text-foreground ${
+                  className={`py-1 text-center flex flex-col items-center justify-center transition-all duration-300 hover:text-foreground ${
                     active
                       ? "text-foreground border-b border-foreground"
                       : "text-foreground/70"
                   }`}
                 >
-                  {link.name}
+                  {isMultiWord ? (
+                    <span className="flex flex-col items-center justify-center leading-tight">
+                      {words.map((word, idx) => (
+                        <span key={idx} className="whitespace-nowrap">
+                          {word}
+                        </span>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="whitespace-nowrap">{link.name}</span>
+                  )}
                 </Link>
               );
             })}
           </div>
 
-          {/* Spacer for Mobile to balance Hamburger menu (Desktop unchanged) */}
+          {/* Balancing Spacer for Desktop so Center Links stay perfectly centered */}
+          <div className="hidden md:block shrink-0 w-auto md:w-[80px] lg:w-[120px] xl:w-[150px] pointer-events-none" aria-hidden="true" />
+
+          {/* Spacer for Mobile to balance Hamburger menu */}
           <div className="w-6 md:hidden" aria-hidden="true" />
         </div>
       </nav>
