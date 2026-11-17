@@ -29,6 +29,18 @@ Architecture consistency is mandatory.
 
 ---
 
+# Documentation Map
+
+The repository documentation follows the **Diataxis Framework** in `docs/`:
+
+- [Documentation Map](docs/README.md): Master index and Diataxis quadrant navigation.
+- [Architecture Conventions](docs/reference/architecture-conventions.md): Detailed layer contracts, directory layout, and file limits.
+- [Domain Glossary](docs/reference/domain-glossary.md): Canonical terminology and status state machines.
+- [Adding a Feature](docs/how-to/adding-a-feature.md): Vertical slice implementation checklist.
+- [Issue & PR Workflow](docs/how-to/issue-and-pr-workflow.md): Team Git workflow, branching strategy, and PR rules.
+
+---
+
 # Core Principles
 
 ## 1 File = 1 Responsibility
@@ -717,3 +729,66 @@ Do not sacrifice architecture for shorter code.
 # Golden Rule
 
 If a file cannot be explained in one sentence, it probably has more than one responsibility and should be split.
+
+---
+
+# Git Workflow & Branching Strategy
+
+## Branch Naming Convention
+
+Never commit and push directly to `main`. Every issue must be worked on in an isolated branch created from latest `main`.
+
+Format:
+```txt
+<type>/issue-<number>-<feature-slug>
+```
+
+Types:
+- `feat/`: New feature or business functionality
+- `fix/`: Bug fix or security vulnerability patch
+- `refactor/`: Code reorganization or architectural refactoring without changing user-facing behavior
+- `docs/`: Documentation, `.env.example`, or guide updates
+- `test/`: Adding or fixing automated test suites
+
+Examples:
+- `fix/issue-12-middleware-proxy`
+- `fix/issue-13-doku-signature-bypass`
+- `fix/issue-14-cron-auth-protection`
+- `refactor/issue-15-src-structure`
+- `feat/issue-18-client-email-notification`
+- `feat/issue-19-balance-payment`
+- `feat/issue-20-deliverables-link`
+- `feat/issue-25-attendance-checkin`
+
+---
+
+## Issue Execution Workflow
+
+Before starting work on an issue:
+
+1. **Sync with latest main:**
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+
+2. **Create dedicated branch:**
+   ```bash
+   git checkout -b <type>/issue-<number>-<feature-slug>
+   ```
+
+3. **Stage & Commit following Conventional Commits:**
+   ```txt
+   <type>(<scope>): <short description>
+   ```
+   Examples:
+   - `fix(security): resolve Next.js middleware inactivity due to proxy.ts`
+   - `feat(notification): add automated client booking confirmation email`
+   - `refactor(architecture): encapsulate direct prisma queries into repository`
+
+4. **Push Branch & Open Pull Request:**
+   ```bash
+   git push -u origin <type>/issue-<number>-<feature-slug>
+   gh pr create --title "<type>(<scope>): <title>" --body "Closes #<number>"
+   ```
+
