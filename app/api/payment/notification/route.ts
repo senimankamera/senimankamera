@@ -15,36 +15,30 @@ export async function POST(request: Request) {
       headersObj[key] = value;
     });
 
-    let isValid = dokuService.verifyWebhookSignature(
+    const isValid = dokuService.verifyWebhookSignature(
       headersObj,
       rawBody,
       requestTarget
     );
 
-    const bookingDraftRepository = new BookingDraftRepository();
-    let body: any = null;
-    try {
-      body = JSON.parse(rawBody);
-    } catch (e) {
-      console.error("Failed to parse DOKU webhook body JSON:", e);
-    }
-
-    const orderId = body?.order?.invoice_number as string;
-
-    // Fallback verifikasi: Jika signature mismatch (misal pada DOKU Simulator / Sandbox),
-    // pastikan order_id valid & terdaftar di tabel Draft database kita.
-    if (!isValid && orderId) {
-      const draft = await bookingDraftRepository.findDraftById(orderId);
-      if (draft) {
-        console.log(`DOKU Webhook signature mismatch fallback: Draft valid ditemukan untuk Invoice ${orderId}. Memproses request...`);
-        isValid = true;
-      }
-    }
-
     if (!isValid) {
       console.warn("Unauthorized signature from DOKU webhook. Rejecting request.");
       return Response.json({ success: false, error: "Invalid signature" }, { status: 401 });
     }
+
+    const bookingDraftRepository = new BookingDraftRepository();
+    let body: {
+      order?: { invoice_number?: string };
+      transaction?: { status?: string };
+    } | null = null;
+    try {
+      body = JSON.parse(rawBody);
+    } catch (e) {
+      console.error("Failed to parse DOKU webhook body JSON:", e);
+      return Response.json({ success: false, error: "Invalid JSON payload" }, { status: 400 });
+    }
+
+    const orderId = body?.order?.invoice_number as string;
 
     const transactionStatus = body?.transaction?.status as string; // "SUCCESS" | "FAILED" | "EXPIRED"
 
@@ -100,8 +94,9 @@ export async function POST(request: Request) {
       }
 
     } else if (isCancelled) {
-      await bookingDraftRepository.deleteDraft(orderId).catch((err: any) => {
-        console.log(`BookingDraft ${orderId} not found, already deleted, or error:`, err.message);
+      await bookingDraftRepository.deleteDraft(orderId).catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : String(err);
+        console.log(`BookingDraft ${orderId} not found, already deleted, or error:`, message);
       });
       console.log(`BookingDraft deleted due to payment ${transactionStatus} for Invoice: ${orderId}`);
     } else {
@@ -109,8 +104,9 @@ export async function POST(request: Request) {
     }
 
     return Response.json({ success: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error processing DOKU webhook:", error);
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    return Response.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }
